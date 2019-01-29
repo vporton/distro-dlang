@@ -1,0 +1,9 @@
+﻿{
+        "name": "distro-dlang",
+        "authors": [
+                "Victor Porton"
+        ],
+        "description": "Determine the OS of our computer",
+        "copyright": "Copyright © 2019, Victor Porton",
+        "license": "Apache-2.0"
+}
