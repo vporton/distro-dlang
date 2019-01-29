@@ -454,19 +454,24 @@ string uname_attr(string attribute) {
 }
 
 
-class cached_property(object):
-    """A version of @property which caches the value.  On access, it calls the
-    underlying function and sets the value in `__dict__` so future accesses
-    will not re-call the property.
-    """
-    def __init__(self, f):
-        self._fname = f.__name__
-        self._f = f
-
-    def __get__(self, obj, owner):
-        assert obj is not None, 'call {} on an instance'.format(self._fname)
-        ret = obj.__dict__[self._fname] = self._f(obj)
-        return ret
+/**
+The following code makes cached (memoized) property `f`
+```
+class {
+    @property string _f() { ... }
+    mixin Cached!"f";
+}
+```
+*/
+mixin template Cached(string name, string baseName = '_' ~ name) {
+    mixin("private typeof(" ~ baseName ~ ") " ~ name ~ "Cache;");
+    mixin("private bool " ~ name ~ "IsCached = false;");
+    mixin("@property typeof(" ~ baseName ~ ") " ~ name ~ "() {\n" ~
+          "if (" ~ name ~ "IsCached" ~ ") return " ~ name ~ "Cache;\n" ~
+          name ~ "IsCached = true;\n" ~
+          "return " ~ name ~ "Cache = " ~ baseName ~ ";\n" ~
+          '}');
+}
 
 
 class LinuxDistribution(object):
