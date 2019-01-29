@@ -1,9 +1,26 @@
 ﻿{
-        "name": "distro-dlang",
-        "authors": [
-                "Victor Porton"
-        ],
-        "description": "Determine the OS of our computer",
-        "copyright": "Copyright © 2019, Victor Porton",
-        "license": "Apache-2.0"
+   "name":"distro-dlang",
+   "authors":[
+      "Victor Porton"
+   ],
+   "description":"Determine the OS of our computer",
+   "copyright":"Copyright © 2019, Victor Porton",
+   "license":"Apache-2.0",
+   "configurations":[
+      {
+         "name":"application",
+         "targetType":"executable",
+         "sourceFiles":[
+            "test.d"
+         ]
+      },
+      {
+         "name":"shared-library",
+         "targetType":"dynamicLibrary"
+      },
+      {
+         "name":"static-library",
+         "targetType":"staticLibrary"
+      }
+   ]
 }
