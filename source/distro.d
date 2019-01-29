@@ -653,61 +653,69 @@ public:
                 if (name.empty) {
                     name = uname_attr('name');
                 }
-                version_ = this.version_(true)
-                if version_:
+                version_ = this.version_(true);
+                if (version_)
                     name = name ~ ' ' ~ version_;
             }
         }
         return name;
     }
 
-    def version(self, pretty=False, best=False):
-        """
-        Return the version of the OS distribution, as a string.
-        For details, see :func:`distro.version`.
-        """
-        versions = [
-            self.os_release_attr('version_id'),
-            self.lsb_release_attr('release'),
-            self.distro_release_attr('version_id'),
-            self._parse_distro_release_content(
-                self.os_release_attr('pretty_name')).get('version_id', ''),
-            self._parse_distro_release_content(
-                self.lsb_release_attr('description')).get('version_id', ''),
-            self.uname_attr('release')
-        ]
-        version = ''
-        if best:
-            # This algorithm uses the last version in priority order that has
-            # the best precision. If the versions are not in conflict, that
-            # does not matter; otherwise, using the last one instead of the
-            # first one might be considered a surprise.
-            for v in versions:
-                if v.count(".") > version.count(".") or version == '':
-                    version = v
-        else:
-            for v in versions:
-                if v != '':
-                    version = v
-                    break
-        if pretty and version and self.codename():
-            version = u'{0} ({1})'.format(version, self.codename())
-        return version
+    /**
+    Return the version of the OS distribution, as a string.
+    For details, see :func:`distro.version`.
+    */
+    string version_(bool pretty=false, bool best=false) {
+        auto versions = [
+            os_release_attr("version_id"),
+            lsb_release_attr("release"),
+            distro_release_attr("version_id"),
+            _parse_distro_release_content(
+                os_release_attr("pretty_name")).get("version_id", ""),
+            _parse_distro_release_content(
+                lsb_release_attr("description")).get("version_id", ""),
+            uname_attr("release"),
+        ];
+        string version_;
+        if (best) {
+            // This algorithm uses the last version in priority order that has
+            // the best precision. If the versions are not in conflict, that
+            // does not matter; otherwise, using the last one instead of the
+            // first one might be considered a surprise.
+            foreach (v; versions) {
+                if (v.count('.') > version.count('.') or version_.empty)
+                    version_ = v;
+            }
+        } else {
+            foreach (v; versions) {
+                if (!v.empty) {
+                    version_ = v;
+                    break;
+                }
+            }
+        }
+        if (pretty && !version.empty && !self.codename().empty)
+            version_ = u"%s (%s)".format(version_, self.codename());
+        return version_;
+    }
 
-    def version_parts(self, best=False):
-        """
-        Return the version of the OS distribution, as a tuple of version
-        numbers.
-        For details, see :func:`distro.version_parts`.
-        """
-        version_str = self.version(best=best)
-        if version_str:
-            version_regex = re.compile(r'(\d+)\.?(\d+)?\.?(\d+)?')
-            matches = version_regex.match(version_str)
-            if matches:
-                major, minor, build_number = matches.groups()
-                return major, minor or '', build_number or ''
-        return '', '', ''
+    /**
+    Return the version of the OS distribution, as a tuple of version
+    numbers.
+    For details, see :func:`distro.version_parts`.
+    */
+    auto version_parts(bool best=False) {
+        immutable string version_str = self.version_(false, best);
+        if (!version_str.empty) {
+            immutable version_regex = regex(r'(\d+)\.?(\d+)?\.?(\d+)?');
+            immutable matches = version_str.matchAll(version_regex);
+            if (matches) {
+                (major, minor, build_number) = matches.groups(); // FIXME
+                return tuple(major, minor, build_number);
+            }
+        }
+        return tuple('', '', '');
+    }
 
     def major_version(self, best=False):
         """
