@@ -22,7 +22,9 @@ is needed. See `Python issue 1322 <https://bugs.python.org/issue1322>`_ for
 more information.
 */
 
+import std.string;
 import std.process : environment;
+import std.path;
 import std.regex;
 
 immutable string _UNIXCONFDIR = environment.get("UNIXCONFDIR", "/etc");
@@ -35,7 +37,7 @@ immutable string _OS_RELEASE_BASENAME = "os-release";
 //   with blanks translated to underscores.
 //
 // * Value: Normalized value.
-immutable string[string] NORMALIZED_OS_ID = {};
+string[string] NORMALIZED_OS_ID = {};
 
 // Translation table for normalizing the "Distributor ID" attribute returned by
 // the lsb_release command, for use by the :func:`distro.id` method.
@@ -474,154 +476,190 @@ mixin template Cached(string name, string baseName = '_' ~ name) {
 }
 
 
-class LinuxDistribution(object):
-    """
-    Provides information about a OS distribution.
-    This package creates a private module-global instance of this class with
-    default initialization arguments, that is used by the
-    `consolidated accessor functions`_ and `single source accessor functions`_.
-    By using default initialization arguments, that module-global instance
-    returns data about the current OS distribution (i.e. the distro this
-    package runs on).
-    Normally, it is not necessary to create additional instances of this class.
-    However, in situations where control is needed over the exact data sources
-    that are used, instances of this class can be created with a specific
-    distro release file, or a specific os-release file, or without invoking the
-    lsb_release command.
-    """
+/**
+Provides information about a OS distribution.
+This package creates a private module-global instance of this class with
+default initialization arguments, that is used by the
+`consolidated accessor functions`_ and `single source accessor functions`_.
+By using default initialization arguments, that module-global instance
+returns data about the current OS distribution (i.e. the distro this
+package runs on).
+Normally, it is not necessary to create additional instances of this class.
+However, in situations where control is needed over the exact data sources
+that are used, instances of this class can be created with a specific
+distro release file, or a specific os-release file, or without invoking the
+lsb_release command.
+*/
+struct LinuxDistribution {
+private:
+        string os_release_file;
+        string distro_release_file; // updated later
+        bool include_lsb;
+        bool include_uname;
 
-    def __init__(self,
-                 include_lsb=True,
-                 os_release_file='',
-                 distro_release_file='',
-                 include_uname=True):
-        """
-        The initialization method of this class gathers information from the
-        available data sources, and stores that in private instance attributes.
-        Subsequent access to the information items uses these private instance
-        attributes, so that the data sources are read only once.
-        Parameters:
-        * ``include_lsb`` (bool): Controls whether the
-          `lsb_release command output`_ is included as a data source.
-          If the lsb_release command is not available in the program execution
-          path, the data source for the lsb_release command will be empty.
-        * ``os_release_file`` (string): The path name of the
-          `os-release file`_ that is to be used as a data source.
-          An empty string (the default) will cause the default path name to
-          be used (see `os-release file`_ for details).
-          If the specified or defaulted os-release file does not exist, the
-          data source for the os-release file will be empty.
-        * ``distro_release_file`` (string): The path name of the
-          `distro release file`_ that is to be used as a data source.
-          An empty string (the default) will cause a default search algorithm
-          to be used (see `distro release file`_ for details).
-          If the specified distro release file does not exist, or if no default
-          distro release file can be found, the data source for the distro
-          release file will be empty.
-        * ``include_name`` (bool): Controls whether uname command output is
-          included as a data source. If the uname command is not available in
-          the program execution path the data source for the uname command will
-          be empty.
-        Public instance attributes:
-        * ``os_release_file`` (string): The path name of the
-          `os-release file`_ that is actually used as a data source. The
-          empty string if no distro release file is used as a data source.
-        * ``distro_release_file`` (string): The path name of the
-          `distro release file`_ that is actually used as a data source. The
-          empty string if no distro release file is used as a data source.
-        * ``include_lsb`` (bool): The result of the ``include_lsb`` parameter.
-          This controls whether the lsb information will be loaded.
-        * ``include_uname`` (bool): The result of the ``include_uname``
-          parameter. This controls whether the uname information will
-          be loaded.
-        Raises:
-        * :py:exc:`IOError`: Some I/O issue with an os-release file or distro
-          release file.
-        * :py:exc:`subprocess.CalledProcessError`: The lsb_release command had
-          some issue (other than not being available in the program execution
-          path).
-        * :py:exc:`UnicodeError`: A data source has unexpected characters or
-          uses an unexpected encoding.
-        """
-        self.os_release_file = os_release_file or \
-            os.path.join(_UNIXCONFDIR, _OS_RELEASE_BASENAME)
-        self.distro_release_file = distro_release_file or ''  # updated later
-        self.include_lsb = include_lsb
-        self.include_uname = include_uname
+public:
+    /**
+    The initialization method of this class gathers information from the
+    available data sources, and stores that in private instance attributes.
+    Subsequent access to the information items uses these private instance
+    attributes, so that the data sources are read only once.
+    Parameters:
+    * ``include_lsb`` (bool): Controls whether the
+      `lsb_release command output`_ is included as a data source.
+      If the lsb_release command is not available in the program execution
+      path, the data source for the lsb_release command will be empty.
+    * ``os_release_file`` (string): The path name of the
+      `os-release file`_ that is to be used as a data source.
+      An empty string (the default) will cause the default path name to
+      be used (see `os-release file`_ for details).
+      If the specified or defaulted os-release file does not exist, the
+      data source for the os-release file will be empty.
+    * ``distro_release_file`` (string): The path name of the
+      `distro release file`_ that is to be used as a data source.
+      An empty string (the default) will cause a default search algorithm
+      to be used (see `distro release file`_ for details).
+      If the specified distro release file does not exist, or if no default
+      distro release file can be found, the data source for the distro
+      release file will be empty.
+    * ``include_name`` (bool): Controls whether uname command output is
+      included as a data source. If the uname command is not available in
+      the program execution path the data source for the uname command will
+      be empty.
+    Public instance attributes:
+    * ``os_release_file`` (string): The path name of the
+      `os-release file`_ that is actually used as a data source. The
+      empty string if no distro release file is used as a data source.
+    * ``distro_release_file`` (string): The path name of the
+      `distro release file`_ that is actually used as a data source. The
+      empty string if no distro release file is used as a data source.
+    * ``include_lsb`` (bool): The result of the ``include_lsb`` parameter.
+      This controls whether the lsb information will be loaded.
+    * ``include_uname`` (bool): The result of the ``include_uname``
+      parameter. This controls whether the uname information will
+      be loaded.
+    Raises:
+    * :py:exc:`IOError`: Some I/O issue with an os-release file or distro
+      release file.
+    * :py:exc:`subprocess.CalledProcessError`: The lsb_release command had
+      some issue (other than not being available in the program execution
+      path).
+    * :py:exc:`UnicodeError`: A data source has unexpected characters or
+      uses an unexpected encoding.
+    */
+    this(bool include_lsb=true,
+         string os_release_file="",
+         string distro_release_file="",
+         bool include_uname=true)
+    {
+        this.os_release_file = os_release_file != "" ? os_release_file :
+            buildPath(_UNIXCONFDIR, _OS_RELEASE_BASENAME);
+        this.distro_release_file = distro_release_file; // updated later
+        this.include_lsb = include_lsb;
+        this.include_uname = include_uname;
+    }
 
-    def __repr__(self):
-        """Return repr of all info
-        """
-        return \
-            "LinuxDistribution(" \
-            "os_release_file={self.os_release_file!r}, " \
-            "distro_release_file={self.distro_release_file!r}, " \
-            "include_lsb={self.include_lsb!r}, " \
-            "include_uname={self.include_uname!r}, " \
-            "_os_release_info={self._os_release_info!r}, " \
-            "_lsb_release_info={self._lsb_release_info!r}, " \
-            "_distro_release_info={self._distro_release_info!r}, " \
-            "_uname_info={self._uname_info!r})".format(
-                self=self)
+    /**
+    Return repr of all info
+    */
+    string toString() {
+        return
+            "LinuxDistribution%(" ~
+            "os_release_file=%s, " ~
+            "distro_release_file=%s, " ~
+            "include_lsb=%s, " ~
+            "include_uname=%s, " ~
+            "_os_release_info=%s, " ~
+            "_lsb_release_info=%s, " ~
+            "_distro_release_info=%s, " ~
+            "_uname_info=%s)".format(
+                os_release_file,
+                distro_release_file,
+                include_lsb,
+                include_uname,
+                _os_release_info,
+                _lsb_release_info,
+                _distro_release_info,
+                _uname_info);
+    }
 
-    def linux_distribution(self, full_distribution_name=True):
-        """
-        Return information about the OS distribution that is compatible
-        with Python's :func:`platform.linux_distribution`, supporting a subset
-        of its parameters.
-        For details, see :func:`distro.linux_distribution`.
-        """
-        return (
-            self.name() if full_distribution_name else self.id(),
-            self.version(),
+    /**
+    Return information about the OS distribution that is compatible
+    with Python's :func:`platform.linux_distribution`, supporting a subset
+    of its parameters.
+    For details, see :func:`distro.linux_distribution`.
+    */
+    auto linux_distribution(bool full_distribution_name=true) {
+        return tuple(
+            full_distribution_name ? self.name() : self.id(),
+            self.version_(),
             self.codename()
-        )
+        );
+    }
 
-    def id(self):
-        """Return the distro ID of the OS distribution, as a string.
-        For details, see :func:`distro.id`.
-        """
-        def normalize(distro_id, table):
-            distro_id = distro_id.lower().replace(' ', '_')
-            return table.get(distro_id, distro_id)
+    /**
+    Return the distro ID of the OS distribution, as a string.
+    For details, see :func:`distro.id`.
+    */
+    string id() {
+        string normalize(distro_id, table) {
+            immutable string distro_id = distro_id.toLower().replace(' ', '_');
+            return table.get(distro_id, distro_id);
+        }
 
-        distro_id = self.os_release_attr('id')
-        if distro_id:
-            return normalize(distro_id, NORMALIZED_OS_ID)
+        string distro_id;
 
-        distro_id = self.lsb_release_attr('distributor_id')
-        if distro_id:
-            return normalize(distro_id, NORMALIZED_LSB_ID)
+        distro_id = os_release_attr('id');
+        if (distro_id)
+            return normalize(distro_id, NORMALIZED_OS_ID);
 
-        distro_id = self.distro_release_attr('id')
-        if distro_id:
-            return normalize(distro_id, NORMALIZED_DISTRO_ID)
+        distro_id = lsb_release_attr('distributor_id');
+        if (distro_id)
+            return normalize(distro_id, NORMALIZED_LSB_ID);
 
-        distro_id = self.uname_attr('id')
-        if distro_id:
-            return normalize(distro_id, NORMALIZED_DISTRO_ID)
+        distro_id = distro_release_attr('id');
+        if (distro_id)
+            return normalize(distro_id, NORMALIZED_DISTRO_ID);
 
-        return ''
+        distro_id = uname_attr('id');
+        if (distro_id)
+            return normalize(distro_id, NORMALIZED_DISTRO_ID);
 
-    def name(self, pretty=False):
-        """
-        Return the name of the OS distribution, as a string.
-        For details, see :func:`distro.name`.
-        """
-        name = self.os_release_attr('name') \
-            or self.lsb_release_attr('distributor_id') \
-            or self.distro_release_attr('name') \
-            or self.uname_attr('name')
-        if pretty:
-            name = self.os_release_attr('pretty_name') \
-                or self.lsb_release_attr('description')
-            if not name:
-                name = self.distro_release_attr('name') \
-                       or self.uname_attr('name')
-                version = self.version(pretty=True)
-                if version:
-                    name = name + ' ' + version
-        return name or ''
+        return "";
+    }
+
+    /**
+    Return the name of the OS distribution, as a string.
+    For details, see :func:`distro.name`.
+    */
+    string name(bool pretty=false) {
+        string name;
+        name = os_release_attr('name');
+        if (name.empty) {
+            name = lsb_release_attr('distributor_id');
+            if (name.empty) {
+                name = distro_release_attr('name');
+                if (name.empty) {
+                    name = uname_attr('name');
+                }
+            }
+        }
+        if (pretty) {
+            name = os_release_attr('pretty_name');
+            if (name.empty) {
+                name = lsb_release_attr('description')
+            }
+            if (name.empty) {
+                name = distro_release_attr('name');
+                if (name.empty) {
+                    name = uname_attr('name');
+                }
+                version_ = this.version_(true)
+                if version_:
+                    name = name ~ ' ' ~ version_;
+            }
+        }
+        return name;
+    }
 
     def version(self, pretty=False, best=False):
         """
