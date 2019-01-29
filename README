@@ -1,2 +1,5 @@
 This is a not yet working rewrite of https://github.com/nir0s/distro library
 in D programming language.
+
+This is based on 
+https://github.com/nir0s/distro/commit/d20463809ce8ebb24177ea6df5e371be6d6963e1
