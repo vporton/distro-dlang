@@ -710,7 +710,7 @@ public:
             immutable version_regex = regex(r'(\d+)\.?(\d+)?\.?(\d+)?');
             immutable matches = version_str.matchAll(version_regex);
             if (matches) {
-                (major, minor, build_number) = matches.groups(); // FIXME
+                (major, minor, build_number) = matches.groups(); // FIXME: https://bitbucket.org/infognition/dstuff/src
                 return tuple(major, minor, build_number);
             }
         }
