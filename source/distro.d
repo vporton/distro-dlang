@@ -723,138 +723,164 @@ public:
         return tuple('', '', '');
     }
 
-    def major_version(self, best=False):
-        """
-        Return the major version number of the current distribution.
-        For details, see :func:`distro.major_version`.
-        """
-        return self.version_parts(best)[0]
+    /**
+    Return the major version number of the current distribution.
+    For details, see :func:`distro.major_version`.
+    */
+    string major_version(bool best=false) {
+        return version_parts(best)[0];
+    }
 
-    def minor_version(self, best=False):
-        """
-        Return the minor version number of the current distribution.
-        For details, see :func:`distro.minor_version`.
-        """
-        return self.version_parts(best)[1]
+    /**
+    Return the minor version number of the current distribution.
+    For details, see :func:`distro.minor_version`.
+    */
+    string minor_version(bool best=false) {
+        return version_parts(best)[1];
+    }
 
-    def build_number(self, best=False):
-        """
-        Return the build number of the current distribution.
-        For details, see :func:`distro.build_number`.
-        """
-        return self.version_parts(best)[2]
+    /**
+    Return the build number of the current distribution.
+    For details, see :func:`distro.build_number`.
+    */
+    string build_number(bool best=false) {
+        return version_parts(best)[2];
+    }
 
-    def like(self):
-        """
-        Return the IDs of distributions that are like the OS distribution.
-        For details, see :func:`distro.like`.
-        """
-        return self.os_release_attr('id_like') or ''
+    /**
+    Return the IDs of distributions that are like the OS distribution.
+    For details, see :func:`distro.like`.
+    */
+    string like() {
+        return os_release_attr('id_like');
+    }
 
-    def codename(self):
-        """
-        Return the codename of the OS distribution.
-        For details, see :func:`distro.codename`.
-        """
-        return self.os_release_attr('codename') \
-            or self.lsb_release_attr('codename') \
-            or self.distro_release_attr('codename') \
-            or ''
+    /**
+    Return the codename of the OS distribution.
+    For details, see :func:`distro.codename`.
+    */
+    string codename() {
+        string codename;
+        codename = os_release_attr('codename');
+        if (!codename.empty) return codename;
+        codename = lsb_release_attr('codename');
+        if (!codename.empty) return codename;
+        codename = distro_release_attr('codename');
+        if (!codename.empty) return codename;
+        return "";
+    }
 
-    def info(self, pretty=False, best=False):
-        """
-        Return certain machine-readable information about the OS
-        distribution.
-        For details, see :func:`distro.info`.
-        """
-        return dict(
-            id=self.id(),
-            version=self.version(pretty, best),
-            version_parts=dict(
-                major=self.major_version(best),
-                minor=self.minor_version(best),
-                build_number=self.build_number(best)
+    struct VersionInfo {
+        string id, version_, like, codename;
+        Tuple!(string, "major", string, "minor", string, "build_number") version_parts;
+    }
+
+    /**
+    Return certain machine-readable information about the OS
+    distribution.
+    For details, see :func:`distro.info`.
+    */
+    VersionInfo info(bool pretty=false, bool best=false) {
+        return VersionInfo(
+            id: id(),
+            version: version(pretty, best),
+            version_parts: tuple(
+                major=major_version(best),
+                minor=minor_version(best),
+                build_number=build_number(best)
             ),
-            like=self.like(),
-            codename=self.codename(),
-        )
+            like: like(),
+            codename: codename(),
+        );
+    }
 
-    def os_release_info(self):
-        """
-        Return a dictionary containing key-value pairs for the information
-        items from the os-release file data source of the OS distribution.
-        For details, see :func:`distro.os_release_info`.
-        """
-        return self._os_release_info
+    /**
+    Return a dictionary containing key-value pairs for the information
+    items from the os-release file data source of the OS distribution.
+    For details, see :func:`distro.os_release_info`.
+    */
+    string[string] os_release_info() {
+        return _os_release_info;
+    }
 
-    def lsb_release_info(self):
-        """
-        Return a dictionary containing key-value pairs for the information
-        items from the lsb_release command data source of the OS
-        distribution.
-        For details, see :func:`distro.lsb_release_info`.
-        """
-        return self._lsb_release_info
+    /**
+    Return a dictionary containing key-value pairs for the information
+    items from the lsb_release command data source of the OS
+    distribution.
+    For details, see :func:`distro.lsb_release_info`.
+    */
+    string[string] lsb_release_info() {
+        return _lsb_release_info;
+    }
 
-    def distro_release_info(self):
-        """
-        Return a dictionary containing key-value pairs for the information
-        items from the distro release file data source of the OS
-        distribution.
-        For details, see :func:`distro.distro_release_info`.
-        """
-        return self._distro_release_info
+    /**
+    Return a dictionary containing key-value pairs for the information
+    items from the distro release file data source of the OS
+    distribution.
+    For details, see :func:`distro.distro_release_info`.
+    */
+    string[string] distro_release_info() {
+        return _distro_release_info;
+    }
 
-    def uname_info(self):
-        """
-        Return a dictionary containing key-value pairs for the information
-        items from the uname command data source of the OS distribution.
-        For details, see :func:`distro.uname_info`.
-        """
+    /**
+    Return a dictionary containing key-value pairs for the information
+    items from the uname command data source of the OS distribution.
+    For details, see :func:`distro.uname_info`.
+    */
+    auto uname_info() {
+        return _iname_info;
+    }
 
-    def os_release_attr(self, attribute):
-        """
-        Return a single named information item from the os-release file data
-        source of the OS distribution.
-        For details, see :func:`distro.os_release_attr`.
-        """
-        return self._os_release_info.get(attribute, '')
+    /**
+    Return a single named information item from the os-release file data
+    source of the OS distribution.
+    For details, see :func:`distro.os_release_attr`.
+    */
+    string os_release_attr(string attribute) {
+        return _os_release_info.get(attribute, "");
+    }
 
-    def lsb_release_attr(self, attribute):
-        """
-        Return a single named information item from the lsb_release command
-        output data source of the OS distribution.
-        For details, see :func:`distro.lsb_release_attr`.
-        """
-        return self._lsb_release_info.get(attribute, '')
+    /**
+    Return a single named information item from the lsb_release command
+    output data source of the OS distribution.
+    For details, see :func:`distro.lsb_release_attr`.
+    */
+    string lsb_release_attr(string attribute) {
+        return _lsb_release_info.get(attribute, "");
+    }
 
-    def distro_release_attr(self, attribute):
-        """
-        Return a single named information item from the distro release file
-        data source of the OS distribution.
-        For details, see :func:`distro.distro_release_attr`.
-        """
-        return self._distro_release_info.get(attribute, '')
+    /**
+    Return a single named information item from the distro release file
+    data source of the OS distribution.
+    For details, see :func:`distro.distro_release_attr`.
+    */
+    string distro_release_attr(string attribute) {
+        return _distro_release_info.get(attribute, "");
+    }
 
-    def uname_attr(self, attribute):
-        """
-        Return a single named information item from the uname command
-        output data source of the OS distribution.
-        For details, see :func:`distro.uname_release_attr`.
-        """
-        return self._uname_info.get(attribute, '')
+    /**
+    Return a single named information item from the uname command
+    output data source of the OS distribution.
+    For details, see :func:`distro.uname_release_attr`.
+    */
+    string uname_attr(string attribute) {
+        return _uname_info.get(attribute, "");
+    }
 
-    @cached_property
-    def _os_release_info(self):
-        """
-        Get the information items from the specified os-release file.
-        Returns:
-            A dictionary containing all information items.
-        """
-        if os.path.isfile(self.os_release_file):
-            with open(self.os_release_file) as release_file:
-                return self._parse_os_release_content(release_file)
-        return {}
+    /**
+    Get the information items from the specified os-release file.
+    Returns:
+        A dictionary containing all information items.
+    */
+    string[string] _os_release_info_impl() {
+        if (std.file.isFile(os_release_file)) {
+            scope auto file = File(os_release_file);
+            return _parse_os_release_content(release_file.byLine);
+        }
+        return {};
+    }
+    Cached("_os_release_info", "_os_release_info_impl");
 
     @staticmethod
     def _parse_os_release_content(lines):
