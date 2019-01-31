@@ -710,7 +710,7 @@ public:
             immutable version_regex = regex(r'(\d+)\.?(\d+)?\.?(\d+)?');
             immutable matches = version_str.matchAll(version_regex);
             if (matches) {
-                // can be simplified using https://bitbucket.org/infognition/dstuff/src
+                // can be simplified using https://bitbucket.org/infognition/dstuff/src or https://code.dlang.org/packages/vest
                 string major = matches.front.hit;
                 matches.popFront();
                 string minor = matches.front.hit;
