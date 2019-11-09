@@ -882,48 +882,36 @@ public:
     }
     Cached("_os_release_info", "_os_release_info_impl");
 
-    @staticmethod
-    def _parse_os_release_content(lines):
-        """
-        Parse the lines of an os-release file.
-        Parameters:
-        * lines: Iterable through the lines in the os-release file.
-                 Each line must be a unicode string or a UTF-8 encoded byte
-                 string.
-        Returns:
-            A dictionary containing all information items.
-        """
-        props = {}
-        lexer = shlex.shlex(lines, posix=True)
-        lexer.whitespace_split = True
+    /**
+    Parse the lines of an os-release file.
+    Parameters:
+    * lines: Iterable through the lines in the os-release file.
+    Returns:
+        A dictionary containing all information items.
+    */
+    static string[string] _parse_os_release_content(const dstring[] lines) {
+        string[string] props;
 
-        # The shlex module defines its `wordchars` variable using literals,
-        # making it dependent on the encoding of the Python source file.
-        # In Python 2.6 and 2.7, the shlex source file is encoded in
-        # 'iso-8859-1', and the `wordchars` variable is defined as a byte
-        # string. This causes a UnicodeDecodeError to be raised when the
-        # parsed content is a unicode object. The following fix resolves that
-        # (... but it should be fixed in shlex...):
-        if sys.version_info[0] == 2 and isinstance(lexer.wordchars, bytes):
-            lexer.wordchars = lexer.wordchars.decode('iso-8859-1')
+        auto provider = new ShlexProviderStream!(dchar[]).ShlexProvider;
+        ShlexProviderStream!(dchar[]).ShlexParams.WithDefaults params = {posix: true, whitespaceSplit: true};
+        Shlex *lexer = provider.callWithDefaults(params);
 
-        tokens = list(lexer)
-        for token in tokens:
-            # At this point, all shell-like parsing has been done (i.e.
-            # comments processed, quotes and backslash escape sequences
-            # processed, multi-line values assembled, trailing newlines
-            # stripped, etc.), so the tokens are now either:
-            # * variable assignments: var=value
-            # * commands or their arguments (not allowed in os-release)
-            if '=' in token:
-                k, v = token.split('=', 1)
-                if isinstance(v, bytes):
-                    v = v.decode('utf-8')
-                props[k.lower()] = v
-                if k == 'VERSION':
-                    # this handles cases in which the codename is in
-                    # the `(CODENAME)` (rhel, centos, fedora) format
-                    # or in the `, CODENAME` format (Ubuntu).
+        foreach(auto token; *lexer) {
+            // At this point, all shell-like parsing has been done (i.e.
+            // comments processed, quotes and backslash escape sequences
+            // processed, multi-line values assembled, trailing newlines
+            // stripped, etc.), so the tokens are now either:
+            // * variable assignments: var=value
+            // * commands or their arguments (not allowed in os-release)
+            if('=' in token) {
+                immutable eqPosition = token.find('=').front;
+                immutable k = token[$..eqPosition];
+                immutable v = token[eqPosition+1..$];
+                props[k.lower()] = v;
+                if(k == 'VERSION') {
+                    // this handles cases in which the codename is in
+                    // the `(CODENAME)` (rhel, centos, fedora) format
+                    // or in the `, CODENAME` format (Ubuntu).
                     codename = re.search(r'(\(\D+\))|,(\s+)?\D+', v)
                     if codename:
                         codename = codename.group()
@@ -931,13 +919,15 @@ public:
                         codename = codename.strip(',')
                         codename = codename.strip()
                         # codename appears within paranthese.
-                        props['codename'] = codename
+                        props["codename"] = codename
                     else:
-                        props['codename'] = ''
+                        props["codename"] = "";
+                }
             else:
                 # Ignore any tokens that are not variable assignments
                 pass
         return props
+    }
 
     @cached_property
     def _lsb_release_info(self):
