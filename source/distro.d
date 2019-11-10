@@ -1013,92 +1013,101 @@ public:
             if(!match.empty) distro_info["id"] = match[1];
             return distro_info;
         } else:
-            try:
-                basenames = os.listdir(_UNIXCONFDIR)
+            try {
+                auto basenames = dirEntries(_UNIXCONFDIR, SpanMode.shallow);
                 // We sort for repeatability in cases where there are multiple
                 // distro specific files; e.g. CentOS, Oracle, Enterprise all
                 // containing `redhat-release` on top of their own.
-                basenames.sort()
-            except OSError:
+                basenames.sort();
+            }
+            catch(FileError) {
                 // This may occur when /etc is not readable but we can't be
                 // sure about the *-release files. Check common entries of
                 // /etc for information. If they turn out to not be there the
                 // error is handled in `_parse_distro_release_file()`.
-                basenames = ['SuSE-release',
-                             'arch-release',
-                             'base-release',
-                             'centos-release',
-                             'fedora-release',
-                             'gentoo-release',
-                             'mageia-release',
-                             'mandrake-release',
-                             'mandriva-release',
-                             'mandrivalinux-release',
-                             'manjaro-release',
-                             'oracle-release',
-                             'redhat-release',
-                             'sl-release',
-                             'slackware-version']
-            for basename in basenames:
-                if basename in _DISTRO_RELEASE_IGNORE_BASENAMES:
-                    continue
-                match = _DISTRO_RELEASE_BASENAME_PATTERN.match(basename)
-                if match:
-                    filepath = os.path.join(_UNIXCONFDIR, basename)
-                    distro_info = self._parse_distro_release_file(filepath)
-                    if 'name' in distro_info:
-                        # The name is always present if the pattern matches
-                        self.distro_release_file = filepath
-                        distro_info['id'] = match.group(1)
-                        return distro_info
-            return {}
+                basenames = ["SuSE-release",
+                             "arch-release",
+                             "base-release",
+                             "centos-release",
+                             "fedora-release",
+                             "gentoo-release",
+                             "mageia-release",
+                             "mandrake-release",
+                             "mandriva-release",
+                             "mandrivalinux-release",
+                             "manjaro-release",
+                             "oracle-release",
+                             "redhat-release",
+                             "sl-release",
+                             "slackware-version"];
+            }
+            foreach(immutable basename; basenames) {
+                if(basename in _DISTRO_RELEASE_IGNORE_BASENAMES) continue;
+                match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
+                if(!match.empty) {
+                    immutable filepath = chainPath(_UNIXCONFDIR, basename)
+                    auto distro_info = _parse_distro_release_file(filepath);
+                    if("name" in distro_info) {
+                        // The name is always present if the pattern matches
+                        distro_release_file = filepath;
+                        distro_info["id"] = match[1];
+                        return distro_info;
+                    }
+                }
+            }
+            return [];
+        }
     }
     Cached("_distro_release_info", "_distro_release_info_impl");
 
-    def _parse_distro_release_file(self, filepath):
-        """
-        Parse a distro release file.
-        Parameters:
-        * filepath: Path name of the distro release file.
-        Returns:
-            A dictionary containing all information items.
-        """
-        try:
-            with open(filepath) as fp:
-                # Only parse the first line. For instance, on SLES there
-                # are multiple lines. We don't want them...
-                return self._parse_distro_release_content(fp.readline())
-        except (OSError, IOError):
-            # Ignore not being able to read a specific, seemingly version
-            # related file.
-            # See https://github.com/nir0s/distro/issues/162
-            return {}
+    /**
+    Parse a distro release file.
+    Parameters:
+    * filepath: Path name of the distro release file.
+    Returns:
+        A dictionary containing all information items.
+    */
+    string[string] _parse_distro_release_file(string filepath) {
+        try {
+            scope fp = open(filepath);
+            // Only parse the first line. For instance, on SLES there
+            // are multiple lines. We don't want them...
+            return _parse_distro_release_content(fp.readln());
+        }
+        // Ignore not being able to read a specific, seemingly version
+        // related file.
+        // See https://github.com/nir0s/distro/issues/162
+        catch(ErrnoException) {
+            return [];
+        }
+        catch(StdioException) {
+            return [];
+        }
+    }
 
-    @staticmethod
-    def _parse_distro_release_content(line):
-        """
-        Parse a line from a distro release file.
-        Parameters:
-        * line: Line from the distro release file. Must be a unicode string
-                or a UTF-8 encoded byte string.
-        Returns:
-            A dictionary containing all information items.
-        """
-        if isinstance(line, bytes):
-            line = line.decode('utf-8')
-        matches = _DISTRO_RELEASE_CONTENT_REVERSED_PATTERN.match(
-            line.strip()[::-1])
-        distro_info = {}
-        if matches:
-            # regexp ensures non-None
-            distro_info['name'] = matches.group(3)[::-1]
-            if matches.group(2):
-                distro_info['version_id'] = matches.group(2)[::-1]
-            if matches.group(1):
-                distro_info['codename'] = matches.group(1)[::-1]
-        elif line:
-            distro_info['name'] = line.strip()
-        return distro_info
+    /**
+    Parse a line from a distro release file.
+    Parameters:
+    * line: Line from the distro release file. Must be a unicode string
+            or a UTF-8 encoded byte string.
+    Returns:
+        A dictionary containing all information items.
+    */
+    static string[string] _parse_distro_release_content(const dstring line) {
+        matches = line.strip.retro.dtext.matchFirst(_DISTRO_RELEASE_CONTENT_REVERSED_PATTERN);
+        string[string] distro_info;
+        if(!matches.empty) {
+            // regexp ensures non-None
+            distro_info["name"] = matches[3].retro;
+            if(matches[2])
+                distro_info["version_id"] = matches[2].retro;
+            if(matches[1])
+                distro_info["codename"] = matches[1].retro;
+        } else if(!line.empty)
+            distro_info["name"] = line.strip;
+        return distro_info;
+    }
+}
 
-
-_distro = LinuxDistribution()
+/** TODO: Remove this as a global initilization? */
+auto _distro = LinuxDistribution(); // TODO: Can we make it immutable?
