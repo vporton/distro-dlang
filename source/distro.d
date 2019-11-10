@@ -896,7 +896,9 @@ public:
         dstring[dstring] props;
 
         auto provider = new ShlexProviderStream!(dchar[]).ShlexProvider;
-        ShlexProviderStream!(dchar[]).ShlexParams.WithDefaults params = {posix: Shlex.Posix.yes, whitespaceSplit: true};
+        auto stream = lines.join('\n').dup; // TODO: Deal with lines correctly
+        ShlexProviderStream!(dchar[]).ShlexParams.WithDefaults params = {
+            instream: stream, posix: Shlex.Posix.yes, whitespaceSplit: true};
         Shlex *lexer = provider.callWithDefaults(params);
 
         foreach(ctoken; *lexer) {
@@ -908,7 +910,7 @@ public:
             // * commands or their arguments (not allowed in os-release)
             immutable token = ctoken.dtext;
             if(token.canFind('=')) {
-                immutable eqPosition = token.find('=').front;
+                immutable eqPosition = token.countUntil("=");
                 immutable k = token[$..eqPosition];
                 immutable v = token[eqPosition+1..$];
                 props[k.toLower()] = v;
@@ -963,8 +965,8 @@ public:
         dstring[dstring] props;
         foreach(immutable line; lines) {
             immutable line2 = line.strip("\n"d);
-            if(!line2.find(':')) continue;
-            immutable colonPosition = line2.find(':').front;
+            if(!line2.canFind(':')) continue;
+            immutable colonPosition = line2.countUntil(":");
             immutable k = line2[$..colonPosition];
             immutable v = line2[colonPosition+1..$];
             props[k.replace(" "d, "_"d).toLower()] = v.strip();

@@ -6,5 +6,5 @@ import distro;
 void main(string[] args)
 {
     auto distro = LinuxDistribution.create();
-    writeln(distro);
+    writeln(distro.toString);
 }
