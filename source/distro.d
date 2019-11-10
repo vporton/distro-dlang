@@ -911,7 +911,7 @@ public:
             immutable token = ctoken.dtext;
             if(token.canFind('=')) {
                 immutable eqPosition = token.countUntil("=");
-                immutable k = token[$..eqPosition];
+                immutable k = token[0..eqPosition];
                 immutable v = token[eqPosition+1..$];
                 props[k.toLower()] = v;
                 if(k == "VERSION") {
@@ -967,7 +967,7 @@ public:
             immutable line2 = line.strip("\n"d);
             if(!line2.canFind(':')) continue;
             immutable colonPosition = line2.countUntil(":");
-            immutable k = line2[$..colonPosition];
+            immutable k = line2[0..colonPosition];
             immutable v = line2[colonPosition+1..$];
             props[k.replace(" "d, "_"d).toLower()] = v.strip();
         }
