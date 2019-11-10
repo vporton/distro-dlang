@@ -26,6 +26,7 @@ import std.typecons;
 import std.conv;
 import std.algorithm.iteration;
 import std.algorithm.searching;
+import std.algorithm.sorting;
 import std.array;
 import std.string;
 import std.process : environment;
@@ -37,7 +38,7 @@ import std.process;
 import shlex;
 
 immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
-immutable string _OS_RELEASE_BASENAME = "os-release";
+immutable dstring _OS_RELEASE_BASENAME = "os-release"d;
 
 // Translation table for normalizing the "ID" attribute defined in os-release
 // files, for use by the :func:`distro.id` method.
@@ -82,11 +83,11 @@ immutable _DISTRO_RELEASE_BASENAME_PATTERN = regex(
 
 // Base file names to be ignored when searching for distro release file
 immutable _DISTRO_RELEASE_IGNORE_BASENAMES = [
-    "debian_version",
-    "lsb-release",
-    "oem-release",
+    "debian_version"d,
+    "lsb-release"d,
+    "oem-release"d,
     _OS_RELEASE_BASENAME,
-    "system-release"
+    "system-released"
 ];
 
 
@@ -547,7 +548,7 @@ public:
         LinuxDistribution d;
 
         d.os_release_file = os_release_file != "" ? os_release_file :
-            buildPath(_UNIXCONFDIR, _OS_RELEASE_BASENAME);
+            buildPath(_UNIXCONFDIR, _OS_RELEASE_BASENAME.text); // TODO
         d.distro_release_file = distro_release_file; // updated later
         d.include_lsb = include_lsb;
         d.include_uname = include_uname;
@@ -957,12 +958,12 @@ public:
     static dstring[dstring] _parse_lsb_release_content(const dstring[] lines) {
         dstring[dstring] props;
         foreach(immutable line; lines) {
-            immutable line2 = line.strip('\n');
+            immutable line2 = line.strip("\n"d);
             if(!line2.find(':')) continue;
             immutable colonPosition = line2.find(':').front;
             immutable k = line2[$..colonPosition];
             immutable v = line2[colonPosition+1..$];
-            props[k.replace(' ', '_').lower()] = v.strip();
+            props[k.replace(" "d, "_"d).toLower()] = v.strip();
         }
         return props;
     }
@@ -971,14 +972,14 @@ public:
         immutable response = execute(["uname", "-rs"]);
         if(response.status != 0) return null;
         immutable stdout = response.output;
-        return _parse_uname_content(stdout.splitLines); // TODO: stdout.decode(sys.getfilesystemencoding()) in Python
+        return _parse_uname_content(map!dtext(stdout.splitLines).array); // TODO: stdout.decode(sys.getfilesystemencoding()) in Python // TODO: efficiency
     }
     mixin Cached!("_uname_info", "_uname_info_impl");
 
     static dstring[dstring] _parse_uname_content(dstring[] lines) {
         dstring[dstring] props;
-        static immutable r = regex(r"^([^\s]+)\s+([\d\.]+)");
-        immutable match = matchFirst(lines[0].strip(), r); // FIXME: What if there is zero lines? (Also submit bug to Python?)
+        static immutable r = regex(r"^([^\s]+)\s+([\d\.]+)"d);
+        auto match = matchFirst(lines[0].strip(), r); // FIXME: What if there is zero lines? (Also submit bug to Python?)
         if(!match.empty) {
             immutable name = match[1];
             immutable version_ = match[2];
@@ -987,7 +988,7 @@ public:
             // appearing as the 'best' version on otherwise
             // identifiable distributions.
             if(name == "Linux") return null;
-            props["id"] = name.lower();
+            props["id"] = name.toLower();
             props["name"] = name;
             props["release"] = version_;
         }
@@ -1004,55 +1005,56 @@ public:
             // If it was specified, we use it and parse what we can, even if
             // its file name or content does not match the expected pattern.
             auto distro_info = _parse_distro_release_file(distro_release_file);
-            basename = os.path.basename(distro_release_file);
+            immutable basename = baseName(distro_release_file).dtext;
             // The file name pattern for user-specified distro release files
             // is somewhat more tolerant (compared to when searching for the
             // file), because we want to use what was specified as best as
             // possible.
-            match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
+            auto match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
             if(!match.empty) distro_info["id"] = match[1];
             return distro_info;
         } else {
+            dstring[] basenames;
             try {
-                auto basenames = dirEntries(_UNIXCONFDIR, SpanMode.shallow);
+                basenames = map!"a.name.dtext"(dirEntries(_UNIXCONFDIR, SpanMode.shallow)).array; // TODO: Is it path or full path?
                 // We sort for repeatability in cases where there are multiple
                 // distro specific files; e.g. CentOS, Oracle, Enterprise all
                 // containing `redhat-release` on top of their own.
                 basenames.sort();
             }
-            catch(FileError) {
+            catch(FileException) {
                 // This may occur when /etc is not readable but we can't be
                 // sure about the *-release files. Check common entries of
                 // /etc for information. If they turn out to not be there the
                 // error is handled in `_parse_distro_release_file()`.
-                basenames = ["SuSE-release",
-                             "arch-release",
-                             "base-release",
-                             "centos-release",
-                             "fedora-release",
-                             "gentoo-release",
-                             "mageia-release",
-                             "mandrake-release",
-                             "mandriva-release",
-                             "mandrivalinux-release",
-                             "manjaro-release",
-                             "oracle-release",
-                             "redhat-release",
-                             "sl-release",
-                             "slackware-version"];
+                basenames = ["SuSE-release"d,
+                             "arch-release"d,
+                             "base-release"d,
+                             "centos-release"d,
+                             "fedora-release"d,
+                             "gentoo-release"d,
+                             "mageia-release"d,
+                             "mandrake-release"d,
+                             "mandriva-release"d,
+                             "mandrivalinux-release"d,
+                             "manjaro-release"d,
+                             "oracle-release"d,
+                             "redhat-release"d,
+                             "sl-release"d,
+                             "slackware-version"d];
             }
             foreach(immutable basename; basenames) {
-                if(basename in _DISTRO_RELEASE_IGNORE_BASENAMES) continue;
-                match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
+                if(_DISTRO_RELEASE_IGNORE_BASENAMES.canFind(basename)) continue;
+                auto match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
                 if(!match.empty) {
                     immutable filepath = chainPath(_UNIXCONFDIR, basename);
-                    auto distro_info = _parse_distro_release_file(filepath);
+                    auto distro_info = _parse_distro_release_file(filepath.text);
                     if("name" in distro_info) {
                         // The name is always present if the pattern matches
-                        distro_release_file = filepath;
+                        distro_release_file = filepath.text;
                         distro_info["id"] = match[1];
                         return distro_info;
-                        }
+                    }
                 }
             }
             return null;
