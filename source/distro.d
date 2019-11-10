@@ -71,11 +71,11 @@ immutable dstring[dstring] NORMALIZED_DISTRO_ID = [
 
 // Pattern for content of distro release file (reversed)
 immutable _DISTRO_RELEASE_CONTENT_REVERSED_PATTERN = regex(
-    r"(?:[^)]*\)(.*)\()? *(?:STL )?([\d.+\-a-z]*\d) *(?:esaeler *)?(.+)");
+    r"(?:[^)]*\)(.*)\()? *(?:STL )?([\d.+\-a-z]*\d) *(?:esaeler *)?(.+)"d);
 
 // Pattern for base file name of distro release file
 immutable _DISTRO_RELEASE_BASENAME_PATTERN = regex(
-    r"(\w+)[-_](release|version)$");
+    r"(\w+)[-_](release|version)$"d);
 
 // Base file names to be ignored when searching for distro release file
 immutable _DISTRO_RELEASE_IGNORE_BASENAMES = [
@@ -701,7 +701,7 @@ public:
     auto version_parts(bool best=false) {
         immutable dstring version_str = version_(false, best);
         if (!version_str.empty) {
-            auto version_regex = regex(r"(\d+)\.?(\d+)?\.?(\d+)?");
+            auto version_regex = regex(r"(\d+)\.?(\d+)?\.?(\d+)?"d);
             auto matches = version_str.matchAll(version_regex);
             if (matches) {
                 // can be simplified using https://bitbucket.org/infognition/dstuff/src or https://code.dlang.org/packages/vest
