@@ -1,29 +1,58 @@
 {
-   "name":"distro-dlang",
+   "name":"distro",
    "authors":[
       "Victor Porton"
    ],
    "description":"Determine the OS of our computer",
    "copyright":"Copyright © 2019, Victor Porton",
    "license":"Apache-2.0",
-   "configurations":[
-      {
-         "name":"application",
-         "targetType":"executable",
-         "sourceFiles":[
-            "test.d"
-         ]
-      },
-      {
-         "name":"shared-library",
-         "targetType":"dynamicLibrary"
-      },
-      {
-         "name":"static-library",
-         "targetType":"staticLibrary"
+   "targetType": "none",
+   "subPackages": [
+     {
+       "name": "library",
+       "description": "Distro library",
+       "targetName": "distro-dlang",
+       "configurations": [
+         {
+           "name": "application",
+           "targetType": "executable",
+           "sourceFiles": [
+             "test.d"
+           ]
+         },
+         {
+           "name": "shared-library",
+           "targetType": "dynamicLibrary"
+         },
+         {
+           "name": "static-library",
+           "targetType": "staticLibrary"
+         }
+       ],
+      "dependencies": {
+         "shlex": ">=0.9.5"
       }
+     },
+     {
+       "name": "distro",
+       "description": "Distro package (test)",
+       "targetName": "distro",
+       "configurations": [
+         {
+           "name": "application",
+           "targetType": "executable",
+           "sourceFiles": [
+             "distro-main.d"
+           ]
+         }
+       ],
+       "dependencies": {
+         "distro:library": "*",
+       }
+     }
    ],
    "dependencies": {
-      "shlex": ">=0.9.5"
-   }
+      "distro:library": "*",
+      "distro:distro": "*"
+    }
 }
