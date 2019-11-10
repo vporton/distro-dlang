@@ -541,15 +541,16 @@ public:
     */
     dstring toString() {
         return
-            "LinuxDistribution%("d ~
-            "os_release_file=%s, "d ~
-            "distro_release_file=%s, "d ~
-            "include_lsb=%s, "d ~
-            "include_uname=%s, "d ~
-            "_os_release_info=%s, "d ~
-            "_lsb_release_info=%s, "d ~
-            "_distro_release_info=%s, "d ~
-            "_uname_info=%s)"d.format(
+            format!(
+                "LinuxDistribution("d ~
+                "os_release_file=%s, "d ~
+                "distro_release_file=%s, "d ~
+                "include_lsb=%s, "d ~
+                "include_uname=%s, "d ~
+                "_os_release_info=%s, "d ~
+                "_lsb_release_info=%s, "d ~
+                "_distro_release_info=%s, "d ~
+                "_uname_info=%s)"d)(
                 os_release_file,
                 distro_release_file,
                 include_lsb,

@@ -1,5 +1,7 @@
-This is a not yet working rewrite of https://github.com/nir0s/distro library
-in D programming language.
+`distro` provides information about the OS distribution it runs on, such as a reliable machine-readable ID, or version information.
 
-This is based on 
+Distro currently supports Linux and BSD based systems but Windows and OS X support is also planned.
+
+This is a rewrite of https://github.com/nir0s/distro library
+in D programming language based on
 https://github.com/nir0s/distro/commit/d20463809ce8ebb24177ea6df5e371be6d6963e1
