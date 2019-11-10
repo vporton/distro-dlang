@@ -912,21 +912,23 @@ public:
                     // this handles cases in which the codename is in
                     // the `(CODENAME)` (rhel, centos, fedora) format
                     // or in the `, CODENAME` format (Ubuntu).
-                    codename = re.search(r'(\(\D+\))|,(\s+)?\D+', v)
-                    if codename:
-                        codename = codename.group()
-                        codename = codename.strip('()')
-                        codename = codename.strip(',')
-                        codename = codename.strip()
-                        # codename appears within paranthese.
-                        props["codename"] = codename
-                    else:
+                    static immutable ourRegex = regex("(\(\D+\))|,(\s+)?\D+");
+                    auto codenameMatch = matchFirst(v, ourRegex);
+                    if(!codenameMatch.empty) {
+                        auto codename = codenameMatch[0];
+                        codename = codename.strip('()');
+                        codename = codename.strip(',');
+                        codename = codename.strip();
+                        // codename appears within paranthese.
+                        props["codename"] = codename;
+                    } else {
                         props["codename"] = "";
+                    }
                 }
-            else:
-                # Ignore any tokens that are not variable assignments
-                pass
-        return props
+            else {
+                // Ignore any tokens that are not variable assignments
+            }
+        return props;
     }
 
     @cached_property
