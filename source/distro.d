@@ -22,6 +22,7 @@ is needed. See `Python issue 1322 <https://bugs.python.org/issue1322>`_ for
 more information.
 */
 
+import std.typecons;
 import std.string;
 import std.process : environment;
 import std.path;
@@ -37,7 +38,7 @@ immutable string _OS_RELEASE_BASENAME = "os-release";
 //   with blanks translated to underscores.
 //
 // * Value: Normalized value.
-string[string] NORMALIZED_OS_ID = {};
+string[string] NORMALIZED_OS_ID;
 
 // Translation table for normalizing the "Distributor ID" attribute returned by
 // the lsb_release command, for use by the :func:`distro.id` method.
@@ -255,7 +256,7 @@ part of the dot-separated version string.
 For a description of the *best* parameter, see the :func:`distro.version`
 method.
 */
-string major_version(best=False) {
+string major_version(bool best=false) {
     return _distro.major_version(best);
 }
 
@@ -530,16 +531,20 @@ public:
     * :py:exc:`UnicodeError`: A data source has unexpected characters or
       uses an unexpected encoding.
     */
-    this(bool include_lsb=true,
-         string os_release_file="",
-         string distro_release_file="",
-         bool include_uname=true)
+    static LinuxDistribution create(bool include_lsb=true,
+                                    string os_release_file="",
+                                    string distro_release_file="",
+                                    bool include_uname=true)
     {
-        this.os_release_file = os_release_file != "" ? os_release_file :
+        LinuxDistribution d;
+
+        d.os_release_file = os_release_file != "" ? os_release_file :
             buildPath(_UNIXCONFDIR, _OS_RELEASE_BASENAME);
-        this.distro_release_file = distro_release_file; // updated later
-        this.include_lsb = include_lsb;
-        this.include_uname = include_uname;
+        d.distro_release_file = distro_release_file; // updated later
+        d.include_lsb = include_lsb;
+        d.include_uname = include_uname;
+
+        return d;
     }
 
     /**
@@ -688,7 +693,7 @@ public:
     numbers.
     For details, see :func:`distro.version_parts`.
     */
-    auto version_parts(bool best=False) {
+    auto version_parts(bool best=false) {
         immutable string version_str = self.version_(false, best);
         if (!version_str.empty) {
             immutable version_regex = regex(r"(\d+)\.?(\d+)?\.?(\d+)?");
@@ -857,7 +862,7 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    string[string] _os_release_info_impl() {
+    @property string[string] _os_release_info_impl() {
         if (std.file.isFile(os_release_file)) {
             scope auto file = File(os_release_file);
             return _parse_os_release_content(release_file.byLine);
@@ -921,7 +926,7 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    string[string] _lsb_release_info_impl() {
+    @property string[string] _lsb_release_info_impl() {
         if(!include_lsb) return [];
         immutable response = execute(["lsb_release", "-a"]);
         if(response.status != 0) return [];
@@ -952,7 +957,7 @@ public:
         return props;
     }
 
-    string[string] _uname_info_impl() {
+    @property string[string] _uname_info_impl() {
         immutable response = execute(["uname", "-rs"]);
         if(response.status != 0) return [];
         immutable stdout = response.output;
@@ -984,7 +989,7 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    string[string] _distro_release_info_impl() {
+    @property string[string] _distro_release_info_impl() {
         if(!self.distro_release_file.empty) {
             // If it was specified, we use it and parse what we can, even if
             // its file name or content does not match the expected pattern.
@@ -1095,4 +1100,4 @@ public:
 }
 
 /** TODO: Remove this as a global initilization? */
-auto _distro = LinuxDistribution(); // TODO: Can we make it immutable?
+auto _distro = LinuxDistribution.create(); // TODO: Can we make it immutable?
