@@ -38,7 +38,7 @@ immutable string _OS_RELEASE_BASENAME = "os-release";
 //   with blanks translated to underscores.
 //
 // * Value: Normalized value.
-string[string] NORMALIZED_OS_ID;
+dstring[dstring] NORMALIZED_OS_ID;
 
 // Translation table for normalizing the "Distributor ID" attribute returned by
 // the lsb_release command, for use by the :func:`distro.id` method.
@@ -47,7 +47,7 @@ string[string] NORMALIZED_OS_ID;
 //   case, with blanks translated to underscores.
 //
 // * Value: Normalized value.
-immutable string[string] NORMALIZED_LSB_ID = [
+immutable dstring[dstring] NORMALIZED_LSB_ID = [
     "enterpriseenterprise": "oracle",  // Oracle Enterprise Linux
     "redhatenterpriseworkstation": "rhel",  // RHEL 6, 7 Workstation
     "redhatenterpriseserver": "rhel",  // RHEL 6, 7 Server
@@ -60,7 +60,7 @@ immutable string[string] NORMALIZED_LSB_ID = [
 //   translated to lower case, with blanks translated to underscores.
 //
 // * Value: Normalized value.
-immutable string[string] NORMALIZED_DISTRO_ID = [
+immutable dstring[dstring] NORMALIZED_DISTRO_ID = [
     "redhat": "rhel",  // RHEL 6.x, 7.x
 ];
 
@@ -642,7 +642,7 @@ public:
                 if (name.empty) {
                     name = uname_attr("name");
                 }
-                version_ = version_(true);
+                immutable version_ = this.version_(true);
                 if (version_)
                     name = name ~ ' ' ~ version_;
             }
