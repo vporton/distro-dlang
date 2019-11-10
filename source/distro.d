@@ -23,7 +23,9 @@ more information.
 */
 
 import std.typecons;
+import std.exception;
 import std.conv;
+import std.range;
 import std.algorithm.iteration;
 import std.algorithm.searching;
 import std.algorithm.sorting;
@@ -37,6 +39,8 @@ import std.file;
 import std.process;
 import shlex;
 
+// FIXME: Make them private:
+
 immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
 immutable dstring _OS_RELEASE_BASENAME = "os-release"d;
 
@@ -48,30 +52,6 @@ immutable dstring _OS_RELEASE_BASENAME = "os-release"d;
 //
 // * Value: Normalized value.
 dstring[dstring] NORMALIZED_OS_ID;
-
-// Translation table for normalizing the "Distributor ID" attribute returned by
-// the lsb_release command, for use by the :func:`distro.id` method.
-//
-// * Key: Value as returned by the lsb_release command, translated to lower
-//   case, with blanks translated to underscores.
-//
-// * Value: Normalized value.
-immutable dstring[dstring] NORMALIZED_LSB_ID = [
-    "enterpriseenterprise": "oracle",  // Oracle Enterprise Linux
-    "redhatenterpriseworkstation": "rhel",  // RHEL 6, 7 Workstation
-    "redhatenterpriseserver": "rhel",  // RHEL 6, 7 Server
-];
-
-// Translation table for normalizing the distro ID derived from the file name
-// of distro release files, for use by the :func:`distro.id` method.
-//
-// * Key: Value as derived from the file name of a distro release file,
-//   translated to lower case, with blanks translated to underscores.
-//
-// * Value: Normalized value.
-immutable dstring[dstring] NORMALIZED_DISTRO_ID = [
-    "redhat": "rhel",  // RHEL 6.x, 7.x
-];
 
 // Pattern for content of distro release file (reversed)
 immutable _DISTRO_RELEASE_CONTENT_REVERSED_PATTERN = regex(
@@ -604,6 +584,30 @@ public:
             return table.get(distro_id2, distro_id2);
         }
 
+        // Translation table for normalizing the "Distributor ID" attribute returned by
+        // the lsb_release command, for use by the :func:`distro.id` method.
+        //
+        // * Key: Value as returned by the lsb_release command, translated to lower
+        //   case, with blanks translated to underscores.
+        //
+        // * Value: Normalized value.
+        immutable NORMALIZED_LSB_ID = [
+            "enterpriseenterprise"d: "oracle"d,  // Oracle Enterprise Linux
+            "redhatenterpriseworkstation"d: "rhel"d,  // RHEL 6, 7 Workstation
+            "redhatenterpriseserver"d: "rhel"d,  // RHEL 6, 7 Server
+        ];
+
+        // Translation table for normalizing the distro ID derived from the file name
+        // of distro release files, for use by the :func:`distro.id` method.
+        //
+        // * Key: Value as derived from the file name of a distro release file,
+        //   translated to lower case, with blanks translated to underscores.
+        //
+        // * Value: Normalized value.
+        dstring[dstring] NORMALIZED_DISTRO_ID = [
+            "redhat"d: "rhel"d,  // RHEL 6.x, 7.x
+        ];
+
         dstring distro_id;
 
         distro_id = os_release_attr("id");
@@ -1071,10 +1075,10 @@ public:
     */
     dstring[dstring] _parse_distro_release_file(string filepath) {
         try {
-            scope fp = open(filepath);
+            scope fp = File(filepath);
             // Only parse the first line. For instance, on SLES there
             // are multiple lines. We don't want them...
-            return _parse_distro_release_content(fp.readln());
+            return _parse_distro_release_content(fp.readln().dtext);
         }
         // Ignore not being able to read a specific, seemingly version
         // related file.
@@ -1096,15 +1100,15 @@ public:
         A dictionary containing all information items.
     */
     static dstring[dstring] _parse_distro_release_content(const dstring line) {
-        matches = line.strip.retro.dtext.matchFirst(_DISTRO_RELEASE_CONTENT_REVERSED_PATTERN);
+        auto matches = line.strip.retro.dtext.matchFirst(_DISTRO_RELEASE_CONTENT_REVERSED_PATTERN);
         dstring[dstring] distro_info;
         if(!matches.empty) {
             // regexp ensures non-None
-            distro_info["name"] = matches[3].retro;
+            distro_info["name"] = matches[3].retro.array;
             if(matches[2])
-                distro_info["version_id"] = matches[2].retro;
+                distro_info["version_id"] = matches[2].retro.array;
             if(matches[1])
-                distro_info["codename"] = matches[1].retro;
+                distro_info["codename"] = matches[1].retro.array;
         } else if(!line.empty)
             distro_info["name"] = line.strip;
         return distro_info;
