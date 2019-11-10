@@ -233,7 +233,6 @@ string version_(bool pretty=false, bool best=false) {
     return _distro.version_(pretty, best);
 }
 
-
 /**
 Return the version of the current OS distribution as a tuple
 ``(major, minor, build_number)`` with items as follows:
@@ -260,7 +259,6 @@ string major_version(best=False) {
     return _distro.major_version(best);
 }
 
-
 /**
 Return the minor version of the current OS distribution, as a string,
 if provided.
@@ -273,7 +271,6 @@ string minor_version(bool best=false) {
     return _distro.minor_version(best);
 }
 
-
 /**
 Return the build number of the current OS distribution, as a string,
 if provided.
@@ -285,7 +282,6 @@ method.
 string build_number(bool best=false) {
     return _distro.build_number(best);
 }
-
 
 /**
 Return a space-separated list of distro IDs of distributions that are
@@ -301,7 +297,6 @@ For details, see the description of the "ID_LIKE" attribute in the
 string like() {
     return _distro.like();
 }
-
 
 /**
 Return the codename for the release of the current OS distribution,
@@ -320,7 +315,6 @@ cases in any special way and just returns the string it finds, if any.
 string codename() {
     return _distro.codename();
 }
-
 
 /**
 Return certain machine-readable information items about the current OS
@@ -355,7 +349,6 @@ auto info(bool pretty=false, bool best=false) {
     return _distro.info(pretty, best);
 }
 
-
 /**
 Return a dictionary containing key-value pairs for the information items
 from the os-release file data source of the current OS distribution.
@@ -364,7 +357,6 @@ See `os-release file`_ for details about these information items.
 string[string] os_release_info() {
     return _distro.os_release_info();
 }
-
 
 /**
 Return a dictionary containing key-value pairs for the information items
@@ -376,7 +368,6 @@ string[string] lsb_release_info() {
     return _distro.lsb_release_info();
 }
 
-
 /**
 Return a dictionary containing key-value pairs for the information items
 from the distro release file data source of the current OS distribution.
@@ -386,7 +377,6 @@ string[string] distro_release_info() {
     return _distro.distro_release_info();
 }
 
-
 /**
 Return a dictionary containing key-value pairs for the information items
 from the distro release file data source of the current OS distribution.
@@ -394,7 +384,6 @@ from the distro release file data source of the current OS distribution.
 string[string] uname_info() {
     return _distro.uname_info();
 }
-
 
 /**
 Return a single named information item from the os-release file data source
@@ -409,7 +398,6 @@ See `os-release file`_ for details about these information items.
 string os_release_attr(string attribute) {
     return _distro.os_release_attr(attribute);
 }
-
 
 /**
 Return a single named information item from the lsb_release command output
@@ -426,7 +414,6 @@ string lsb_release_attr(string attribute) {
     return _distro.lsb_release_attr(attribute);
 }
 
-
 /**
 Return a single named information item from the distro release file
 data source of the current OS distribution.
@@ -441,7 +428,6 @@ string distro_release_attr(string attribute) {
     return _distro.distro_release_attr(attribute);
 }
 
-
 /**
 Return a single named information item from the distro release file
 data source of the current OS distribution.
@@ -454,7 +440,6 @@ Returns:
 string uname_attr(string attribute) {
     return _distro.uname_attr(attribute);
 }
-
 
 /**
 The following code makes cached (memoized) property `f`
@@ -474,7 +459,6 @@ mixin template Cached(string name, string baseName = '_' ~ name) {
           "return " ~ name ~ "Cache = " ~ baseName ~ ";\n" ~
           '}');
 }
-
 
 /**
 Provides information about a OS distribution.
@@ -925,9 +909,10 @@ public:
                         props["codename"] = "";
                     }
                 }
-            else {
+            } else {
                 // Ignore any tokens that are not variable assignments
             }
+        }
         return props;
     }
 
