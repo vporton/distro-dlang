@@ -775,16 +775,17 @@ public:
     For details, see :func:`distro.info`.
     */
     VersionInfo info(bool pretty=false, bool best=false) {
+        Tuple!(dstring, "major", dstring, "minor", dstring, "build_number") version_parts = tuple(
+            /*major:*/ major_version(best),
+            /*minor:*/ minor_version(best),
+            /*build_number:*/ build_number(best)
+        );
         return VersionInfo(
             /*id:*/ id(),
             /*version_:*/ version_(pretty, best),
             /*like:*/ like(),
             /*codename:*/ codename(),
-            /*version_parts:*/ tuple(
-                /*major:*/ major_version(best),
-                /*minor:*/ minor_version(best),
-                /*build_number:*/ build_number(best)
-            ),
+            /*version_parts:*/ version_parts,
         );
     }
 
