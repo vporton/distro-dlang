@@ -21,6 +21,7 @@ Still, there are many cases in which access to OS distribution information
 is needed. See `Python issue 1322 <https://bugs.python.org/issue1322>`_ for
 more information.
 */
+module distro;
 
 import std.typecons;
 import std.exception;
