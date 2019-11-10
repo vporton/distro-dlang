@@ -931,23 +931,20 @@ public:
         return props;
     }
 
-    @cached_property
-    def _lsb_release_info(self):
-        """
-        Get the information items from the lsb_release command output.
-        Returns:
-            A dictionary containing all information items.
-        """
-        if not self.include_lsb:
-            return {}
-        with open(os.devnull, 'w') as devnull:
-            try:
-                cmd = ('lsb_release', '-a')
-                stdout = subprocess.check_output(cmd, stderr=devnull)
-            except OSError:  # Command not found
-                return {}
-        content = stdout.decode(sys.getfilesystemencoding()).splitlines()
-        return self._parse_lsb_release_content(content)
+    /**
+    Get the information items from the lsb_release command output.
+    Returns:
+        A dictionary containing all information items.
+    */
+    string[string] _lsb_release_info_impl() {
+        if(!include_lsb) return [];
+        scope devnull = open("/dev/null", "w"); // TODO: Support non-Unix
+        immutable response = execute(["lsb_release", "-a"], stderr=devnull);
+        if(response.status != 0) return [];
+        immutable stdout = response.output;
+        return self._parse_lsb_release_content(stdout.splitLines); // TODO: in Python stdout.decode(sys.getfilesystemencoding())
+    }
+    Cached("_lsb_release_info", "_lsb_release_info_impl");
 
     @staticmethod
     def _parse_lsb_release_content(lines):
