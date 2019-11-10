@@ -461,7 +461,7 @@ The following code makes cached (memoized) property `f`
 ```
 class {
     @property string _f() { ... }
-    mixin Cached!"f";
+    mixin mixin Cached!"f";
 }
 ```
 */
@@ -880,7 +880,7 @@ public:
         }
         return {};
     }
-    Cached("_os_release_info", "_os_release_info_impl");
+    mixin Cached!("_os_release_info", "_os_release_info_impl");
 
     /**
     Parse the lines of an os-release file.
@@ -896,7 +896,7 @@ public:
         ShlexProviderStream!(dchar[]).ShlexParams.WithDefaults params = {posix: true, whitespaceSplit: true};
         Shlex *lexer = provider.callWithDefaults(params);
 
-        foreach(auto token; *lexer) {
+        foreach(token; *lexer) {
             // At this point, all shell-like parsing has been done (i.e.
             // comments processed, quotes and backslash escape sequences
             // processed, multi-line values assembled, trailing newlines
@@ -908,11 +908,11 @@ public:
                 immutable k = token[$..eqPosition];
                 immutable v = token[eqPosition+1..$];
                 props[k.lower()] = v;
-                if(k == 'VERSION') {
+                if(k == "VERSION") {
                     // this handles cases in which the codename is in
                     // the `(CODENAME)` (rhel, centos, fedora) format
                     // or in the `, CODENAME` format (Ubuntu).
-                    static immutable ourRegex = regex("(\(\D+\))|,(\s+)?\D+");
+                    static immutable ourRegex = regex(r"(\(\D+\))|,(\s+)?\D+");
                     auto codenameMatch = matchFirst(v, ourRegex);
                     if(!codenameMatch.empty) {
                         auto codename = codenameMatch[0];
@@ -977,7 +977,7 @@ public:
 
     static string[string] _parse_uname_content(string[] lines) {
         string[string] props;
-        static immutable r = regex("^([^\s]+)\s+([\d\.]+)");
+        static immutable r = regex(r"^([^\s]+)\s+([\d\.]+)");
         immutable match = matchFirst(lines[0].strip(), r); // FIXME: What if there is zero lines? (Also submit bug to Python?)
         if(!match.empty) {
             immutable name = match[1];
