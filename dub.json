@@ -1,4 +1,4 @@
-﻿{
+{
    "name":"distro-dlang",
    "authors":[
       "Victor Porton"
@@ -22,5 +22,8 @@
          "name":"static-library",
          "targetType":"staticLibrary"
       }
-   ]
+   ],
+   "dependencies": {
+      "shlex": ">=0.9.5"
+   }
 }

@@ -32,6 +32,7 @@ import std.path;
 import std.regex;
 import std.stdio;
 import std.file;
+import shlex;
 
 immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
 immutable string _OS_RELEASE_BASENAME = "os-release";
