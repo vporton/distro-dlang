@@ -396,7 +396,7 @@ Returns:
   The empty string, if the item does not exist.
 See `os-release file`_ for details about these information items.
 */
-dstring os_release_attr(string attribute) {
+dstring os_release_attr(dstring attribute) {
     return _distro.os_release_attr(attribute);
 }
 
@@ -552,15 +552,15 @@ public:
     */
     dstring toString() {
         return
-            "LinuxDistribution%(" ~
-            "os_release_file=%s, " ~
-            "distro_release_file=%s, " ~
-            "include_lsb=%s, " ~
-            "include_uname=%s, " ~
-            "_os_release_info=%s, " ~
-            "_lsb_release_info=%s, " ~
-            "_distro_release_info=%s, " ~
-            "_uname_info=%s)".format(
+            "LinuxDistribution%("d ~
+            "os_release_file=%s, "d ~
+            "distro_release_file=%s, "d ~
+            "include_lsb=%s, "d ~
+            "include_uname=%s, "d ~
+            "_os_release_info=%s, "d ~
+            "_lsb_release_info=%s, "d ~
+            "_distro_release_info=%s, "d ~
+            "_uname_info=%s)"d.format(
                 os_release_file,
                 distro_release_file,
                 include_lsb,
@@ -591,7 +591,7 @@ public:
     */
     dstring id() {
         dstring normalize(const dstring distro_id, const dstring[dstring] table) {
-            immutable dstring distro_id2 = distro_id.toLower.replace(' ', '_');
+            immutable dstring distro_id2 = distro_id.toLower.replace(" "d, "_"d);
             return table.get(distro_id2, distro_id2);
         }
 
@@ -709,7 +709,7 @@ public:
                 return tuple(major, minor, build_number);
             }
         }
-        return tuple("", "", "");
+        return tuple(""d, ""d, ""d);
     }
 
     /**
