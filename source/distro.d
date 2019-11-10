@@ -23,10 +23,15 @@ more information.
 */
 
 import std.typecons;
+import std.conv;
+import std.algorithm.iteration;
+import std.array;
 import std.string;
 import std.process : environment;
 import std.path;
 import std.regex;
+import std.stdio;
+import std.file;
 
 immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
 immutable string _OS_RELEASE_BASENAME = "os-release";
@@ -864,10 +869,10 @@ public:
     */
     @property dstring[dstring] _os_release_info_impl() {
         if (std.file.isFile(os_release_file)) {
-            scope auto file = File(os_release_file);
-            return _parse_os_release_content(release_file.byLine);
+            scope auto release_file = File(os_release_file);
+            return _parse_os_release_content(map!dtext(release_file.byLine).array); // TODO: efficiency
         }
-        return {};
+        return null;
     }
     mixin Cached!("_os_release_info", "_os_release_info_impl");
 
@@ -927,9 +932,9 @@ public:
         A dictionary containing all information items.
     */
     @property dstring[dstring] _lsb_release_info_impl() {
-        if(!include_lsb) return [];
+        if(!include_lsb) return null;
         immutable response = execute(["lsb_release", "-a"]);
-        if(response.status != 0) return [];
+        if(response.status != 0) return null;
         immutable stdout = response.output;
         return _parse_lsb_release_content(stdout.splitLines); // TODO: in Python stdout.decode(sys.getfilesystemencoding())
     }
@@ -959,7 +964,7 @@ public:
 
     @property dstring[dstring] _uname_info_impl() {
         immutable response = execute(["uname", "-rs"]);
-        if(response.status != 0) return [];
+        if(response.status != 0) return null;
         immutable stdout = response.output;
         return _parse_uname_content(stdout.splitLines); // TODO: stdout.decode(sys.getfilesystemencoding()) in Python
     }
@@ -976,7 +981,7 @@ public:
             // This is to prevent the Linux kernel version from
             // appearing as the 'best' version on otherwise
             // identifiable distributions.
-            if(name == "Linux") return [];
+            if(name == "Linux") return null;
             props["id"] = name.lower();
             props["name"] = name;
             props["release"] = version_;
@@ -1045,7 +1050,7 @@ public:
                         }
                 }
             }
-            return [];
+            return null;
         }
     }
     mixin Cached!("_distro_release_info", "_distro_release_info_impl");
@@ -1068,10 +1073,10 @@ public:
         // related file.
         // See https://github.com/nir0s/distro/issues/162
         catch(ErrnoException) {
-            return [];
+            return null;
         }
         catch(StdioException) {
-            return [];
+            return null;
         }
     }
 
