@@ -166,7 +166,7 @@ before it is returned by this method:
   command, with ID values that differ from what was previously determined
   from the distro release file name.
 */
-string id() {
+dstring id() {
     return _distro.id();
 }
 
@@ -194,14 +194,14 @@ The first available and non-empty value is used:
     with the value of the pretty version ("<version_id>" and "<codename>"
     fields) of the distro release file, if available.
 */
-string name(bool pretty=false) {
+dstring name(bool pretty=false) {
     return _distro.name(pretty);
 }
 
 
 /**
 Return the version of the current OS distribution, as a human-readable
-string.
+dstring.
 If *pretty* is false, the version is returned without codename (e.g.
 "7.0").
 If *pretty* is true, the codename in parenthesis is appended, if the
@@ -230,7 +230,7 @@ If *best* is false, this order represents the priority order:
   the lsb_release command, if it follows the format of the distro release
   files.
 */
-string version_(bool pretty=false, bool best=false) {
+dstring version_(bool pretty=false, bool best=false) {
     return _distro.version_(pretty, best);
 }
 
@@ -256,7 +256,7 @@ part of the dot-separated version string.
 For a description of the *best* parameter, see the :func:`distro.version`
 method.
 */
-string major_version(bool best=false) {
+dstring major_version(bool best=false) {
     return _distro.major_version(best);
 }
 
@@ -268,7 +268,7 @@ part of the dot-separated version string.
 For a description of the *best* parameter, see the :func:`distro.version`
 method.
 */
-string minor_version(bool best=false) {
+dstring minor_version(bool best=false) {
     return _distro.minor_version(best);
 }
 
@@ -280,7 +280,7 @@ of the dot-separated version string.
 For a description of the *best* parameter, see the :func:`distro.version`
 method.
 */
-string build_number(bool best=false) {
+dstring build_number(bool best=false) {
     return _distro.build_number(best);
 }
 
@@ -295,7 +295,7 @@ For details, see the description of the "ID_LIKE" attribute in the
 `os-release man page
 <http://www.freedesktop.org/software/systemd/man/os-release.html>`_.
 */
-string like() {
+dstring like() {
     return _distro.like();
 }
 
@@ -313,7 +313,7 @@ cases in any special way and just returns the string it finds, if any.
   command,
 * the value of the "<codename>" field of the distro release file.
 */
-string codename() {
+dstring codename() {
     return _distro.codename();
 }
 
@@ -355,7 +355,7 @@ Return a dictionary containing key-value pairs for the information items
 from the os-release file data source of the current OS distribution.
 See `os-release file`_ for details about these information items.
 */
-string[string] os_release_info() {
+dstring[dstring] os_release_info() {
     return _distro.os_release_info();
 }
 
@@ -365,7 +365,7 @@ from the lsb_release command data source of the current OS distribution.
 See `lsb_release command output`_ for details about these information
 items.
 */
-string[string] lsb_release_info() {
+dstring[dstring] lsb_release_info() {
     return _distro.lsb_release_info();
 }
 
@@ -374,7 +374,7 @@ Return a dictionary containing key-value pairs for the information items
 from the distro release file data source of the current OS distribution.
 See `distro release file`_ for details about these information items.
 */
-string[string] distro_release_info() {
+dstring[dstring] distro_release_info() {
     return _distro.distro_release_info();
 }
 
@@ -382,7 +382,7 @@ string[string] distro_release_info() {
 Return a dictionary containing key-value pairs for the information items
 from the distro release file data source of the current OS distribution.
 */
-string[string] uname_info() {
+dstring[dstring] uname_info() {
     return _distro.uname_info();
 }
 
@@ -396,7 +396,7 @@ Returns:
   The empty string, if the item does not exist.
 See `os-release file`_ for details about these information items.
 */
-string os_release_attr(string attribute) {
+dstring os_release_attr(string attribute) {
     return _distro.os_release_attr(attribute);
 }
 
@@ -411,7 +411,7 @@ Returns:
 See `lsb_release command output`_ for details about these information
 items.
 */
-string lsb_release_attr(string attribute) {
+dstring lsb_release_attr(dstring attribute) {
     return _distro.lsb_release_attr(attribute);
 }
 
@@ -425,7 +425,7 @@ Returns:
   The empty string, if the item does not exist.
 See `distro release file`_ for details about these information items.
 */
-string distro_release_attr(string attribute) {
+dstring distro_release_attr(dstring attribute) {
     return _distro.distro_release_attr(attribute);
 }
 
@@ -438,7 +438,7 @@ Returns:
 * (string): Value of the information item, if the item exists.
             The empty string, if the item does not exist.
 */
-string uname_attr(string attribute) {
+dstring uname_attr(dstring attribute) {
     return _distro.uname_attr(attribute);
 }
 
@@ -550,7 +550,7 @@ public:
     /**
     Return repr of all info
     */
-    string toString() {
+    dstring toString() {
         return
             "LinuxDistribution%(" ~
             "os_release_file=%s, " ~
@@ -589,13 +589,13 @@ public:
     Return the distro ID of the OS distribution, as a string.
     For details, see :func:`distro.id`.
     */
-    string id() {
-        string normalize(const string distro_id, const string[string] table) {
-            immutable string distro_id2 = distro_id.toLower.replace(' ', '_');
+    dstring id() {
+        dstring normalize(const dstring distro_id, const dstring[dstring] table) {
+            immutable dstring distro_id2 = distro_id.toLower.replace(' ', '_');
             return table.get(distro_id2, distro_id2);
         }
 
-        string distro_id;
+        dstring distro_id;
 
         distro_id = os_release_attr("id");
         if (distro_id)
@@ -620,8 +620,8 @@ public:
     Return the name of the OS distribution, as a string.
     For details, see :func:`distro.name`.
     */
-    string name(bool pretty=false) {
-        string name;
+    dstring name(bool pretty=false) {
+        dstring name;
         name = os_release_attr("name");
         if (name.empty) {
             name = lsb_release_attr("distributor_id");
@@ -654,7 +654,7 @@ public:
     Return the version of the OS distribution, as a string.
     For details, see :func:`distro.version`.
     */
-    string version_(bool pretty=false, bool best=false) {
+    dstring version_(bool pretty=false, bool best=false) {
         auto versions = [
             os_release_attr("version_id"),
             lsb_release_attr("release"),
@@ -665,7 +665,7 @@ public:
                 lsb_release_attr("description")).get("version_id", ""),
             uname_attr("release"),
         ];
-        string version_;
+        dstring version_;
         if (best) {
             // This algorithm uses the last version in priority order that has
             // the best precision. If the versions are not in conflict, that
@@ -694,17 +694,17 @@ public:
     For details, see :func:`distro.version_parts`.
     */
     auto version_parts(bool best=false) {
-        immutable string version_str = version_(false, best);
+        immutable dstring version_str = version_(false, best);
         if (!version_str.empty) {
             auto version_regex = regex(r"(\d+)\.?(\d+)?\.?(\d+)?");
             auto matches = version_str.matchAll(version_regex);
             if (matches) {
                 // can be simplified using https://bitbucket.org/infognition/dstuff/src or https://code.dlang.org/packages/vest
-                string major = matches.front.hit;
+                dstring major = matches.front.hit;
                 matches.popFront();
-                string minor = matches.front.hit;
+                dstring minor = matches.front.hit;
                 matches.popFront();
-                string build_number = matches.front.hit;
+                dstring build_number = matches.front.hit;
                 //matches.popFront();
                 return tuple(major, minor, build_number);
             }
@@ -716,7 +716,7 @@ public:
     Return the major version number of the current distribution.
     For details, see :func:`distro.major_version`.
     */
-    string major_version(bool best=false) {
+    dstring major_version(bool best=false) {
         return version_parts(best)[0];
     }
 
@@ -724,7 +724,7 @@ public:
     Return the minor version number of the current distribution.
     For details, see :func:`distro.minor_version`.
     */
-    string minor_version(bool best=false) {
+    dstring minor_version(bool best=false) {
         return version_parts(best)[1];
     }
 
@@ -732,7 +732,7 @@ public:
     Return the build number of the current distribution.
     For details, see :func:`distro.build_number`.
     */
-    string build_number(bool best=false) {
+    dstring build_number(bool best=false) {
         return version_parts(best)[2];
     }
 
@@ -740,7 +740,7 @@ public:
     Return the IDs of distributions that are like the OS distribution.
     For details, see :func:`distro.like`.
     */
-    string like() {
+    dstring like() {
         return os_release_attr("id_like");
     }
 
@@ -748,8 +748,8 @@ public:
     Return the codename of the OS distribution.
     For details, see :func:`distro.codename`.
     */
-    string codename() {
-        string codename;
+    dstring codename() {
+        dstring codename;
         codename = os_release_attr("codename");
         if (!codename.empty) return codename;
         codename = lsb_release_attr("codename");
@@ -760,8 +760,8 @@ public:
     }
 
     struct VersionInfo {
-        string id, version_, like, codename;
-        Tuple!(string, "major", string, "minor", string, "build_number") version_parts;
+        dstring id, version_, like, codename;
+        Tuple!(dstring, "major", dstring, "minor", dstring, "build_number") version_parts;
     }
 
     /**
@@ -788,7 +788,7 @@ public:
     items from the os-release file data source of the OS distribution.
     For details, see :func:`distro.os_release_info`.
     */
-    string[string] os_release_info() {
+    dstring[dstring] os_release_info() {
         return _os_release_info;
     }
 
@@ -798,7 +798,7 @@ public:
     distribution.
     For details, see :func:`distro.lsb_release_info`.
     */
-    string[string] lsb_release_info() {
+    dstring[dstring] lsb_release_info() {
         return _lsb_release_info;
     }
 
@@ -808,7 +808,7 @@ public:
     distribution.
     For details, see :func:`distro.distro_release_info`.
     */
-    string[string] distro_release_info() {
+    dstring[dstring] distro_release_info() {
         return _distro_release_info;
     }
 
@@ -826,7 +826,7 @@ public:
     source of the OS distribution.
     For details, see :func:`distro.os_release_attr`.
     */
-    string os_release_attr(string attribute) {
+    dstring os_release_attr(dstring attribute) {
         return _os_release_info.get(attribute, "");
     }
 
@@ -835,7 +835,7 @@ public:
     output data source of the OS distribution.
     For details, see :func:`distro.lsb_release_attr`.
     */
-    string lsb_release_attr(string attribute) {
+    dstring lsb_release_attr(dstring attribute) {
         return _lsb_release_info.get(attribute, "");
     }
 
@@ -844,7 +844,7 @@ public:
     data source of the OS distribution.
     For details, see :func:`distro.distro_release_attr`.
     */
-    string distro_release_attr(string attribute) {
+    dstring distro_release_attr(dstring attribute) {
         return _distro_release_info.get(attribute, "");
     }
 
@@ -853,7 +853,7 @@ public:
     output data source of the OS distribution.
     For details, see :func:`distro.uname_release_attr`.
     */
-    string uname_attr(string attribute) {
+    dstring uname_attr(dstring attribute) {
         return _uname_info.get(attribute, "");
     }
 
@@ -862,7 +862,7 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    @property string[string] _os_release_info_impl() {
+    @property dstring[dstring] _os_release_info_impl() {
         if (std.file.isFile(os_release_file)) {
             scope auto file = File(os_release_file);
             return _parse_os_release_content(release_file.byLine);
@@ -878,8 +878,8 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    static string[string] _parse_os_release_content(const dstring[] lines) {
-        string[string] props;
+    static dstring[dstring] _parse_os_release_content(const dstring[] lines) {
+        dstring[dstring] props;
 
         auto provider = new ShlexProviderStream!(dchar[]).ShlexProvider;
         ShlexProviderStream!(dchar[]).ShlexParams.WithDefaults params = {posix: true, whitespaceSplit: true};
@@ -926,7 +926,7 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    @property string[string] _lsb_release_info_impl() {
+    @property dstring[dstring] _lsb_release_info_impl() {
         if(!include_lsb) return [];
         immutable response = execute(["lsb_release", "-a"]);
         if(response.status != 0) return [];
@@ -944,8 +944,8 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    static string[string] _parse_lsb_release_content(const string[] lines) {
-        string[string] props;
+    static dstring[dstring] _parse_lsb_release_content(const dstring[] lines) {
+        dstring[dstring] props;
         foreach(immutable line; lines) {
             immutable line2 = line.strip('\n');
             if(!line2.find(':')) continue;
@@ -957,7 +957,7 @@ public:
         return props;
     }
 
-    @property string[string] _uname_info_impl() {
+    @property dstring[dstring] _uname_info_impl() {
         immutable response = execute(["uname", "-rs"]);
         if(response.status != 0) return [];
         immutable stdout = response.output;
@@ -965,8 +965,8 @@ public:
     }
     mixin Cached!("_uname_info", "_uname_info_impl");
 
-    static string[string] _parse_uname_content(string[] lines) {
-        string[string] props;
+    static dstring[dstring] _parse_uname_content(dstring[] lines) {
+        dstring[dstring] props;
         static immutable r = regex(r"^([^\s]+)\s+([\d\.]+)");
         immutable match = matchFirst(lines[0].strip(), r); // FIXME: What if there is zero lines? (Also submit bug to Python?)
         if(!match.empty) {
@@ -989,7 +989,7 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    @property string[string] _distro_release_info_impl() {
+    @property dstring[dstring] _distro_release_info_impl() {
         if(!distro_release_file.empty) {
             // If it was specified, we use it and parse what we can, even if
             // its file name or content does not match the expected pattern.
@@ -1057,7 +1057,7 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    string[string] _parse_distro_release_file(string filepath) {
+    dstring[dstring] _parse_distro_release_file(string filepath) {
         try {
             scope fp = open(filepath);
             // Only parse the first line. For instance, on SLES there
@@ -1083,9 +1083,9 @@ public:
     Returns:
         A dictionary containing all information items.
     */
-    static string[string] _parse_distro_release_content(const dstring line) {
+    static dstring[dstring] _parse_distro_release_content(const dstring line) {
         matches = line.strip.retro.dtext.matchFirst(_DISTRO_RELEASE_CONTENT_REVERSED_PATTERN);
-        string[string] distro_info;
+        dstring[dstring] distro_info;
         if(!matches.empty) {
             // regexp ensures non-None
             distro_info["name"] = matches[3].retro;
