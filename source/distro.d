@@ -40,10 +40,8 @@ import std.file;
 import std.process;
 import shlex;
 
-// FIXME: Make them private:
-
-immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
-immutable dstring _OS_RELEASE_BASENAME = "os-release"d;
+private immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
+private immutable dstring _OS_RELEASE_BASENAME = "os-release"d;
 
 // Translation table for normalizing the "ID" attribute defined in os-release
 // files, for use by the :func:`distro.id` method.
@@ -52,18 +50,18 @@ immutable dstring _OS_RELEASE_BASENAME = "os-release"d;
 //   with blanks translated to underscores.
 //
 // * Value: Normalized value.
-dstring[dstring] NORMALIZED_OS_ID;
+private dstring[dstring] NORMALIZED_OS_ID;
 
 // Pattern for content of distro release file (reversed)
-immutable _DISTRO_RELEASE_CONTENT_REVERSED_PATTERN = regex(
+private immutable _DISTRO_RELEASE_CONTENT_REVERSED_PATTERN = regex(
     r"(?:[^)]*\)(.*)\()? *(?:STL )?([\d.+\-a-z]*\d) *(?:esaeler *)?(.+)"d);
 
 // Pattern for base file name of distro release file
-immutable _DISTRO_RELEASE_BASENAME_PATTERN = regex(
+private immutable _DISTRO_RELEASE_BASENAME_PATTERN = regex(
     r"(\w+)[-_](release|version)$"d);
 
 // Base file names to be ignored when searching for distro release file
-immutable _DISTRO_RELEASE_IGNORE_BASENAMES = [
+private immutable _DISTRO_RELEASE_IGNORE_BASENAMES = [
     "debian_version"d,
     "lsb-release"d,
     "oem-release"d,
