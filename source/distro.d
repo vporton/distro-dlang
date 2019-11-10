@@ -938,7 +938,6 @@ public:
     */
     string[string] _lsb_release_info_impl() {
         if(!include_lsb) return [];
-        scope devnull = open("/dev/null", "w"); // TODO: Support non-Unix
         immutable response = execute(["lsb_release", "-a"], stderr=devnull);
         if(response.status != 0) return [];
         immutable stdout = response.output;
