@@ -938,95 +938,92 @@ public:
     */
     string[string] _lsb_release_info_impl() {
         if(!include_lsb) return [];
-        immutable response = execute(["lsb_release", "-a"], stderr=devnull);
+        immutable response = execute(["lsb_release", "-a"]);
         if(response.status != 0) return [];
         immutable stdout = response.output;
         return self._parse_lsb_release_content(stdout.splitLines); // TODO: in Python stdout.decode(sys.getfilesystemencoding())
     }
     Cached("_lsb_release_info", "_lsb_release_info_impl");
 
-    @staticmethod
-    def _parse_lsb_release_content(lines):
-        """
-        Parse the output of the lsb_release command.
-        Parameters:
-        * lines: Iterable through the lines of the lsb_release output.
-                 Each line must be a unicode string or a UTF-8 encoded byte
-                 string.
-        Returns:
-            A dictionary containing all information items.
-        """
-        props = {}
-        for line in lines:
-            kv = line.strip('\n').split(':', 1)
-            if len(kv) != 2:
-                # Ignore lines without colon.
-                continue
-            k, v = kv
-            props.update({k.replace(' ', '_').lower(): v.strip()})
-        return props
+    /**
+    Parse the output of the lsb_release command.
+    Parameters:
+    * lines: Iterable through the lines of the lsb_release output.
+                Each line must be a unicode string or a UTF-8 encoded byte
+                string.
+    Returns:
+        A dictionary containing all information items.
+    */
+    static string[string] _parse_lsb_release_content(const string[] lines) {
+        string[string] props;
+        foreach(immutable line; lines) {
+            immutable line2 = line.strip('\n');
+            if(!line2.find(':')) continue;
+            immutable colonPosition = line2.find(':').front;
+            immutable k = line2[$..colonPosition];
+            immutable v = line2[colonPosition+1..$];
+            props[k.replace(' ', '_').lower()] = v.strip();
+        }
+        return props;
+    }
 
-    @cached_property
-    def _uname_info(self):
-        with open(os.devnull, 'w') as devnull:
-            try:
-                cmd = ('uname', '-rs')
-                stdout = subprocess.check_output(cmd, stderr=devnull)
-            except OSError:
-                return {}
-        content = stdout.decode(sys.getfilesystemencoding()).splitlines()
-        return self._parse_uname_content(content)
+    string[string] _uname_info_impl() {
+        immutable response = execute(["uname", "-rs"]);
+        if(response.status != 0) return [];
+        immutable stdout = response.output;
+        return _parse_uname_content(stdout.splitLines); // TODO: stdout.decode(sys.getfilesystemencoding()) in Python
+    }
+    Cached("_uname_info", "_uname_info_impl");
 
-    @staticmethod
-    def _parse_uname_content(lines):
-        props = {}
-        match = re.search(r'^([^\s]+)\s+([\d\.]+)', lines[0].strip())
-        if match:
-            name, version = match.groups()
+    static string[string] _parse_uname_content(string[] lines) {
+        string[string] props;
+        static immutable r = regex("^([^\s]+)\s+([\d\.]+)");
+        immutable match = matchFirst(lines[0].strip(), r); // FIXME: What if there is zero lines? (Also submit bug to Python?)
+        if(!match.empty) {
+            immutable name = match[1];
+            immutable version_ = match[2];
 
-            # This is to prevent the Linux kernel version from
-            # appearing as the 'best' version on otherwise
-            # identifiable distributions.
-            if name == 'Linux':
-                return {}
-            props['id'] = name.lower()
-            props['name'] = name
-            props['release'] = version
-        return props
+            // This is to prevent the Linux kernel version from
+            // appearing as the 'best' version on otherwise
+            // identifiable distributions.
+            if(name == "Linux") return [];
+            props["id"] = name.lower();
+            props["name"] = name;
+            props["release"] = version_;
+        }
+        return props;
+    }
 
-    @cached_property
-    def _distro_release_info(self):
-        """
-        Get the information items from the specified distro release file.
-        Returns:
-            A dictionary containing all information items.
-        """
-        if self.distro_release_file:
-            # If it was specified, we use it and parse what we can, even if
-            # its file name or content does not match the expected pattern.
-            distro_info = self._parse_distro_release_file(
-                self.distro_release_file)
+    /**
+    Get the information items from the specified distro release file.
+    Returns:
+        A dictionary containing all information items.
+    */
+    string[string] _distro_release_info_impl() {
+        if(!self.distro_release_file.empty) {
+            // If it was specified, we use it and parse what we can, even if
+            // its file name or content does not match the expected pattern.
+            auto distro_info = _parse_distro_release_file(distro_release_file);
             basename = os.path.basename(self.distro_release_file)
-            # The file name pattern for user-specified distro release files
-            # is somewhat more tolerant (compared to when searching for the
-            # file), because we want to use what was specified as best as
-            # possible.
-            match = _DISTRO_RELEASE_BASENAME_PATTERN.match(basename)
-            if match:
-                distro_info['id'] = match.group(1)
-            return distro_info
-        else:
+            // The file name pattern for user-specified distro release files
+            // is somewhat more tolerant (compared to when searching for the
+            // file), because we want to use what was specified as best as
+            // possible.
+            match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
+            if(!match.empty) distro_info["id"] = match[1];
+            return distro_info;
+        } else:
             try:
                 basenames = os.listdir(_UNIXCONFDIR)
-                # We sort for repeatability in cases where there are multiple
-                # distro specific files; e.g. CentOS, Oracle, Enterprise all
-                # containing `redhat-release` on top of their own.
+                // We sort for repeatability in cases where there are multiple
+                // distro specific files; e.g. CentOS, Oracle, Enterprise all
+                // containing `redhat-release` on top of their own.
                 basenames.sort()
             except OSError:
-                # This may occur when /etc is not readable but we can't be
-                # sure about the *-release files. Check common entries of
-                # /etc for information. If they turn out to not be there the
-                # error is handled in `_parse_distro_release_file()`.
+                // This may occur when /etc is not readable but we can't be
+                // sure about the *-release files. Check common entries of
+                // /etc for information. If they turn out to not be there the
+                // error is handled in `_parse_distro_release_file()`.
                 basenames = ['SuSE-release',
                              'arch-release',
                              'base-release',
@@ -1055,6 +1052,8 @@ public:
                         distro_info['id'] = match.group(1)
                         return distro_info
             return {}
+    }
+    Cached("_distro_release_info", "_distro_release_info_impl");
 
     def _parse_distro_release_file(self, filepath):
         """
