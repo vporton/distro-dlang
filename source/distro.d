@@ -25,6 +25,7 @@ more information.
 import std.typecons;
 import std.conv;
 import std.algorithm.iteration;
+import std.algorithm.searching;
 import std.array;
 import std.string;
 import std.process : environment;
@@ -32,6 +33,7 @@ import std.path;
 import std.regex;
 import std.stdio;
 import std.file;
+import std.process;
 import shlex;
 
 immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
@@ -889,31 +891,32 @@ public:
         dstring[dstring] props;
 
         auto provider = new ShlexProviderStream!(dchar[]).ShlexProvider;
-        ShlexProviderStream!(dchar[]).ShlexParams.WithDefaults params = {posix: true, whitespaceSplit: true};
+        ShlexProviderStream!(dchar[]).ShlexParams.WithDefaults params = {posix: Shlex.Posix.yes, whitespaceSplit: true};
         Shlex *lexer = provider.callWithDefaults(params);
 
-        foreach(token; *lexer) {
+        foreach(ctoken; *lexer) {
             // At this point, all shell-like parsing has been done (i.e.
             // comments processed, quotes and backslash escape sequences
             // processed, multi-line values assembled, trailing newlines
             // stripped, etc.), so the tokens are now either:
             // * variable assignments: var=value
             // * commands or their arguments (not allowed in os-release)
-            if('=' in token) {
+            immutable token = ctoken.dtext;
+            if(token.canFind('=')) {
                 immutable eqPosition = token.find('=').front;
                 immutable k = token[$..eqPosition];
                 immutable v = token[eqPosition+1..$];
-                props[k.lower()] = v;
+                props[k.toLower()] = v;
                 if(k == "VERSION") {
                     // this handles cases in which the codename is in
                     // the `(CODENAME)` (rhel, centos, fedora) format
                     // or in the `, CODENAME` format (Ubuntu).
-                    static immutable ourRegex = regex(r"(\(\D+\))|,(\s+)?\D+");
+                    static immutable ourRegex = regex(r"(\(\D+\))|,(\s+)?\D+"d);
                     auto codenameMatch = matchFirst(v, ourRegex);
                     if(!codenameMatch.empty) {
                         auto codename = codenameMatch[0];
-                        codename = codename.strip("()");
-                        codename = codename.strip(',');
+                        codename = codename.strip("()"d);
+                        codename = codename.strip(","d);
                         codename = codename.strip();
                         // codename appears within paranthese.
                         props["codename"] = codename;
@@ -938,7 +941,7 @@ public:
         immutable response = execute(["lsb_release", "-a"]);
         if(response.status != 0) return null;
         immutable stdout = response.output;
-        return _parse_lsb_release_content(stdout.splitLines); // TODO: in Python stdout.decode(sys.getfilesystemencoding())
+        return _parse_lsb_release_content(map!dtext(stdout.splitLines).array); // TODO: in Python stdout.decode(sys.getfilesystemencoding()) // TODO: efficiency
     }
     mixin Cached!("_lsb_release_info", "_lsb_release_info_impl");
 
