@@ -28,7 +28,7 @@ import std.process : environment;
 import std.path;
 import std.regex;
 
-immutable string _UNIXCONFDIR = environment.get("UNIXCONFDIR", "/etc");
+immutable string _UNIXCONFDIR = "/etc"; //environment.get("UNIXCONFDIR", "/etc"); // FIXME
 immutable string _OS_RELEASE_BASENAME = "os-release";
 
 // Translation table for normalizing the "ID" attribute defined in os-release
@@ -100,7 +100,7 @@ Another reason for differences is the fact that the :func:`distro.id`
 method normalizes the distro ID string to a reliable machine-readable value
 for a number of popular OS distributions.
 */
-string linux_distribution(bool full_distribution_name=true) {
+auto linux_distribution(bool full_distribution_name=true) {
     return _distro.linux_distribution(full_distribution_name);
 }
 
@@ -579,9 +579,9 @@ public:
     */
     auto linux_distribution(bool full_distribution_name=true) {
         return tuple(
-            full_distribution_name ? self.name() : self.id(),
-            self.version_(),
-            self.codename()
+            full_distribution_name ? name : id,
+            version_,
+            codename
         );
     }
 
@@ -590,9 +590,9 @@ public:
     For details, see :func:`distro.id`.
     */
     string id() {
-        string normalize(distro_id, table) {
-            immutable string distro_id = distro_id.toLower().replace(' ', '_');
-            return table.get(distro_id, distro_id);
+        string normalize(const string distro_id, const string[string] table) {
+            immutable string distro_id2 = distro_id.toLower.replace(' ', '_');
+            return table.get(distro_id2, distro_id2);
         }
 
         string distro_id;
@@ -642,7 +642,7 @@ public:
                 if (name.empty) {
                     name = uname_attr("name");
                 }
-                version_ = this.version_(true);
+                version_ = version_(true);
                 if (version_)
                     name = name ~ ' ' ~ version_;
             }
@@ -683,8 +683,8 @@ public:
                 }
             }
         }
-        if (pretty && !version_.empty && !self.codename.empty)
-            version_ = "%s (%s)"d.format(version_, self.codename());
+        if (pretty && !version_.empty && !codename.empty)
+            version_ = "%s (%s)"d.format(version_, codename);
         return version_;
     }
 
@@ -694,10 +694,10 @@ public:
     For details, see :func:`distro.version_parts`.
     */
     auto version_parts(bool best=false) {
-        immutable string version_str = self.version_(false, best);
+        immutable string version_str = version_(false, best);
         if (!version_str.empty) {
-            immutable version_regex = regex(r"(\d+)\.?(\d+)?\.?(\d+)?");
-            immutable matches = version_str.matchAll(version_regex);
+            auto version_regex = regex(r"(\d+)\.?(\d+)?\.?(\d+)?");
+            auto matches = version_str.matchAll(version_regex);
             if (matches) {
                 // can be simplified using https://bitbucket.org/infognition/dstuff/src or https://code.dlang.org/packages/vest
                 string major = matches.front.hit;
@@ -818,7 +818,7 @@ public:
     For details, see :func:`distro.uname_info`.
     */
     auto uname_info() {
-        return _iname_info;
+        return _uname_info;
     }
 
     /**
@@ -931,7 +931,7 @@ public:
         immutable response = execute(["lsb_release", "-a"]);
         if(response.status != 0) return [];
         immutable stdout = response.output;
-        return self._parse_lsb_release_content(stdout.splitLines); // TODO: in Python stdout.decode(sys.getfilesystemencoding())
+        return _parse_lsb_release_content(stdout.splitLines); // TODO: in Python stdout.decode(sys.getfilesystemencoding())
     }
     mixin Cached!("_lsb_release_info", "_lsb_release_info_impl");
 
@@ -990,11 +990,11 @@ public:
         A dictionary containing all information items.
     */
     @property string[string] _distro_release_info_impl() {
-        if(!self.distro_release_file.empty) {
+        if(!distro_release_file.empty) {
             // If it was specified, we use it and parse what we can, even if
             // its file name or content does not match the expected pattern.
             auto distro_info = _parse_distro_release_file(distro_release_file);
-            basename = os.path.basename(self.distro_release_file);
+            basename = os.path.basename(distro_release_file);
             // The file name pattern for user-specified distro release files
             // is somewhat more tolerant (compared to when searching for the
             // file), because we want to use what was specified as best as
