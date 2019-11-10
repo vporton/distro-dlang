@@ -916,7 +916,7 @@ public:
                     auto codenameMatch = matchFirst(v, ourRegex);
                     if(!codenameMatch.empty) {
                         auto codename = codenameMatch[0];
-                        codename = codename.strip('()');
+                        codename = codename.strip("()");
                         codename = codename.strip(',');
                         codename = codename.strip();
                         // codename appears within paranthese.
@@ -943,7 +943,7 @@ public:
         immutable stdout = response.output;
         return self._parse_lsb_release_content(stdout.splitLines); // TODO: in Python stdout.decode(sys.getfilesystemencoding())
     }
-    Cached("_lsb_release_info", "_lsb_release_info_impl");
+    mixin Cached!("_lsb_release_info", "_lsb_release_info_impl");
 
     /**
     Parse the output of the lsb_release command.
@@ -973,7 +973,7 @@ public:
         immutable stdout = response.output;
         return _parse_uname_content(stdout.splitLines); // TODO: stdout.decode(sys.getfilesystemencoding()) in Python
     }
-    Cached("_uname_info", "_uname_info_impl");
+    mixin Cached!("_uname_info", "_uname_info_impl");
 
     static string[string] _parse_uname_content(string[] lines) {
         string[string] props;
@@ -1004,7 +1004,7 @@ public:
             // If it was specified, we use it and parse what we can, even if
             // its file name or content does not match the expected pattern.
             auto distro_info = _parse_distro_release_file(distro_release_file);
-            basename = os.path.basename(self.distro_release_file)
+            basename = os.path.basename(self.distro_release_file);
             // The file name pattern for user-specified distro release files
             // is somewhat more tolerant (compared to when searching for the
             // file), because we want to use what was specified as best as
@@ -1012,7 +1012,7 @@ public:
             match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
             if(!match.empty) distro_info["id"] = match[1];
             return distro_info;
-        } else:
+        } else {
             try {
                 auto basenames = dirEntries(_UNIXCONFDIR, SpanMode.shallow);
                 // We sort for repeatability in cases where there are multiple
@@ -1045,20 +1045,20 @@ public:
                 if(basename in _DISTRO_RELEASE_IGNORE_BASENAMES) continue;
                 match = basename.matchFirst(_DISTRO_RELEASE_BASENAME_PATTERN);
                 if(!match.empty) {
-                    immutable filepath = chainPath(_UNIXCONFDIR, basename)
+                    immutable filepath = chainPath(_UNIXCONFDIR, basename);
                     auto distro_info = _parse_distro_release_file(filepath);
                     if("name" in distro_info) {
                         // The name is always present if the pattern matches
                         distro_release_file = filepath;
                         distro_info["id"] = match[1];
                         return distro_info;
-                    }
+                        }
                 }
             }
             return [];
         }
     }
-    Cached("_distro_release_info", "_distro_release_info_impl");
+    mixin Cached!("_distro_release_info", "_distro_release_info_impl");
 
     /**
     Parse a distro release file.
