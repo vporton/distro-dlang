@@ -46,11 +46,11 @@ string[string] NORMALIZED_OS_ID = {};
 //   case, with blanks translated to underscores.
 //
 // * Value: Normalized value.
-immutable string[string] NORMALIZED_LSB_ID = {
-    'enterpriseenterprise': 'oracle',  // Oracle Enterprise Linux
-    'redhatenterpriseworkstation': 'rhel',  // RHEL 6, 7 Workstation
-    'redhatenterpriseserver': 'rhel',  // RHEL 6, 7 Server
-};
+immutable string[string] NORMALIZED_LSB_ID = [
+    "enterpriseenterprise": "oracle",  // Oracle Enterprise Linux
+    "redhatenterpriseworkstation": "rhel",  // RHEL 6, 7 Workstation
+    "redhatenterpriseserver": "rhel",  // RHEL 6, 7 Server
+];
 
 // Translation table for normalizing the distro ID derived from the file name
 // of distro release files, for use by the :func:`distro.id` method.
@@ -59,13 +59,13 @@ immutable string[string] NORMALIZED_LSB_ID = {
 //   translated to lower case, with blanks translated to underscores.
 //
 // * Value: Normalized value.
-immutable string[string] NORMALIZED_DISTRO_ID = {
-    'redhat': 'rhel',  // RHEL 6.x, 7.x
-};
+immutable string[string] NORMALIZED_DISTRO_ID = [
+    "redhat": "rhel",  // RHEL 6.x, 7.x
+];
 
 // Pattern for content of distro release file (reversed)
 immutable _DISTRO_RELEASE_CONTENT_REVERSED_PATTERN = regex(
-    r'(?:[^)]*\)(.*)\()? *(?:STL )?([\d.+\-a-z]*\d) *(?:esaeler *)?(.+)');
+    r"(?:[^)]*\)(.*)\()? *(?:STL )?([\d.+\-a-z]*\d) *(?:esaeler *)?(.+)");
 
 // Pattern for base file name of distro release file
 immutable _DISTRO_RELEASE_BASENAME_PATTERN = regex(
@@ -73,11 +73,11 @@ immutable _DISTRO_RELEASE_BASENAME_PATTERN = regex(
 
 // Base file names to be ignored when searching for distro release file
 immutable _DISTRO_RELEASE_IGNORE_BASENAMES = [
-    'debian_version',
-    'lsb-release',
-    'oem-release',
+    "debian_version",
+    "lsb-release",
+    "oem-release",
     _OS_RELEASE_BASENAME,
-    'system-release'
+    "system-release"
 ];
 
 
@@ -230,7 +230,7 @@ If *best* is false, this order represents the priority order:
   files.
 */
 string version_(bool pretty=false, bool best=false) {
-    return _distro.version(pretty, best);
+    return _distro.version_(pretty, best);
 }
 
 
@@ -608,19 +608,19 @@ public:
 
         string distro_id;
 
-        distro_id = os_release_attr('id');
+        distro_id = os_release_attr("id");
         if (distro_id)
             return normalize(distro_id, NORMALIZED_OS_ID);
 
-        distro_id = lsb_release_attr('distributor_id');
+        distro_id = lsb_release_attr("distributor_id");
         if (distro_id)
             return normalize(distro_id, NORMALIZED_LSB_ID);
 
-        distro_id = distro_release_attr('id');
+        distro_id = distro_release_attr("id");
         if (distro_id)
             return normalize(distro_id, NORMALIZED_DISTRO_ID);
 
-        distro_id = uname_attr('id');
+        distro_id = uname_attr("id");
         if (distro_id)
             return normalize(distro_id, NORMALIZED_DISTRO_ID);
 
@@ -633,25 +633,25 @@ public:
     */
     string name(bool pretty=false) {
         string name;
-        name = os_release_attr('name');
+        name = os_release_attr("name");
         if (name.empty) {
-            name = lsb_release_attr('distributor_id');
+            name = lsb_release_attr("distributor_id");
             if (name.empty) {
-                name = distro_release_attr('name');
+                name = distro_release_attr("name");
                 if (name.empty) {
-                    name = uname_attr('name');
+                    name = uname_attr("name");
                 }
             }
         }
         if (pretty) {
-            name = os_release_attr('pretty_name');
+            name = os_release_attr("pretty_name");
             if (name.empty) {
-                name = lsb_release_attr('description')
+                name = lsb_release_attr("description");
             }
             if (name.empty) {
-                name = distro_release_attr('name');
+                name = distro_release_attr("name");
                 if (name.empty) {
-                    name = uname_attr('name');
+                    name = uname_attr("name");
                 }
                 version_ = this.version_(true);
                 if (version_)
@@ -683,7 +683,7 @@ public:
             // does not matter; otherwise, using the last one instead of the
             // first one might be considered a surprise.
             foreach (v; versions) {
-                if (v.count('.') > version.count('.') or version_.empty)
+                if (v.count('.') > version_.count('.') || version_.empty)
                     version_ = v;
             }
         } else {
@@ -694,8 +694,8 @@ public:
                 }
             }
         }
-        if (pretty && !version.empty && !self.codename().empty)
-            version_ = u"%s (%s)".format(version_, self.codename());
+        if (pretty && !version_.empty && !self.codename.empty)
+            version_ = "%s (%s)"d.format(version_, self.codename());
         return version_;
     }
 
@@ -707,7 +707,7 @@ public:
     auto version_parts(bool best=False) {
         immutable string version_str = self.version_(false, best);
         if (!version_str.empty) {
-            immutable version_regex = regex(r'(\d+)\.?(\d+)?\.?(\d+)?');
+            immutable version_regex = regex(r"(\d+)\.?(\d+)?\.?(\d+)?");
             immutable matches = version_str.matchAll(version_regex);
             if (matches) {
                 // can be simplified using https://bitbucket.org/infognition/dstuff/src or https://code.dlang.org/packages/vest
@@ -720,7 +720,7 @@ public:
                 return tuple(major, minor, build_number);
             }
         }
-        return tuple('', '', '');
+        return tuple("", "", "");
     }
 
     /**
@@ -752,7 +752,7 @@ public:
     For details, see :func:`distro.like`.
     */
     string like() {
-        return os_release_attr('id_like');
+        return os_release_attr("id_like");
     }
 
     /**
@@ -761,11 +761,11 @@ public:
     */
     string codename() {
         string codename;
-        codename = os_release_attr('codename');
+        codename = os_release_attr("codename");
         if (!codename.empty) return codename;
-        codename = lsb_release_attr('codename');
+        codename = lsb_release_attr("codename");
         if (!codename.empty) return codename;
-        codename = distro_release_attr('codename');
+        codename = distro_release_attr("codename");
         if (!codename.empty) return codename;
         return "";
     }
@@ -782,15 +782,15 @@ public:
     */
     VersionInfo info(bool pretty=false, bool best=false) {
         return VersionInfo(
-            id: id(),
-            version: version(pretty, best),
-            version_parts: tuple(
-                major=major_version(best),
-                minor=minor_version(best),
-                build_number=build_number(best)
+            /*id:*/ id(),
+            /*version_:*/ version_(pretty, best),
+            /*like:*/ like(),
+            /*codename:*/ codename(),
+            /*version_parts:*/ tuple(
+                /*major:*/ major_version(best),
+                /*minor:*/ minor_version(best),
+                /*build_number:*/ build_number(best)
             ),
-            like: like(),
-            codename: codename(),
         );
     }
 
