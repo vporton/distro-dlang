@@ -30,7 +30,7 @@
          }
        ],
       "dependencies": {
-         "shlex": ">=0.9.5"
+         "shlex:library": ">=0.9.5"
       }
      },
      {
